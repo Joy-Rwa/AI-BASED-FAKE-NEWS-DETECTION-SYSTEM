@@ -1,0 +1,2359 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FraudGuard AI — Fake News Detection for Facebook Marketplace</title>
+<!--
+  FraudGuard AI — Single-file demonstration application
+  AI-Based Fake News Detection System for Identifying Fraudulent
+  Business Information on Facebook Marketplace.
+
+  Fully self-contained: HTML + CSS + Vanilla JS + embedded dataset.
+  No backend, no build step, no external CDNs. Open in any browser.
+  The "AI engine" is a transparent heuristic simulation for demo use.
+-->
+<style>
+/* ============================================================
+   1. DESIGN TOKENS
+   ============================================================ */
+:root{
+  /* Surfaces & ink (light theme) */
+  --bg:#EAEFF7;
+  --surface:#FFFFFF;
+  --surface-2:#F6F9FD;
+  --surface-3:#EEF3FA;
+  --ink:#0A1A33;
+  --ink-soft:#33445F;
+  --muted:#6A7A94;
+  --border:#E1E8F2;
+  --border-strong:#CFD9E8;
+
+  /* Brand */
+  --navy:#0A1A33;
+  --navy-2:#0F2747;
+  --royal:#1E50C8;
+  --royal-deep:#16347C;
+  --royal-soft:#E7EEFC;
+  --cyan:#0B92B5;
+  --cyan-soft:#E0F5FA;
+
+  /* Semantic */
+  --green:#15A24A;
+  --green-soft:#DCFAE6;
+  --red:#D92D20;
+  --red-soft:#FDE7E5;
+  --amber:#D98209;
+  --amber-soft:#FCEFD5;
+
+  /* Glass + shadow */
+  --glass:rgba(255,255,255,0.72);
+  --glass-brd:rgba(255,255,255,0.55);
+  --shadow-sm:0 1px 2px rgba(10,26,51,.06),0 1px 3px rgba(10,26,51,.05);
+  --shadow-md:0 4px 12px rgba(10,26,51,.08),0 2px 4px rgba(10,26,51,.05);
+  --shadow-lg:0 18px 40px rgba(10,26,51,.16),0 6px 14px rgba(10,26,51,.08);
+
+  /* Type */
+  --font:"Segoe UI",Roboto,system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+
+  --radius:14px;
+  --radius-sm:10px;
+  --radius-lg:20px;
+  --sidebar-w:264px;
+  --header-h:66px;
+  --speed:.28s;
+}
+
+[data-theme="dark"]{
+  --bg:#060F1C;
+  --surface:#0E1B2E;
+  --surface-2:#122439;
+  --surface-3:#16294071;
+  --ink:#EAF1FB;
+  --ink-soft:#BBC9DD;
+  --muted:#7E90AB;
+  --border:#1D3047;
+  --border-strong:#27405C;
+  --royal:#4A82F0;
+  --royal-deep:#2B62D6;
+  --royal-soft:#16284a;
+  --cyan:#39C2DD;
+  --cyan-soft:#10303a;
+  --green:#33C46A;
+  --green-soft:#10331f;
+  --red:#F4685C;
+  --red-soft:#3a1714;
+  --amber:#F0A93C;
+  --amber-soft:#3a2a0f;
+  --glass:rgba(14,27,46,0.66);
+  --glass-brd:rgba(115,140,180,0.18);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.4);
+  --shadow-md:0 6px 16px rgba(0,0,0,.45);
+  --shadow-lg:0 22px 48px rgba(0,0,0,.6);
+}
+
+/* ============================================================
+   2. RESET & BASE
+   ============================================================ */
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--font);
+  background:var(--bg);
+  color:var(--ink);
+  line-height:1.5;
+  font-size:14.5px;
+  -webkit-font-smoothing:antialiased;
+  transition:background var(--speed),color var(--speed);
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+a{color:var(--royal);text-decoration:none}
+ul{list-style:none}
+.tnum{font-variant-numeric:tabular-nums}
+::selection{background:var(--royal);color:#fff}
+
+/* Scrollbars */
+*::-webkit-scrollbar{width:10px;height:10px}
+*::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:20px;border:2px solid transparent;background-clip:padding-box}
+*::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+
+/* Eyebrow / label style — institutional control-room tone */
+.eyebrow{
+  font-size:11px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--muted);
+}
+
+/* ============================================================
+   3. UTILITY / SHARED COMPONENTS
+   ============================================================ */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:9px 16px;border-radius:var(--radius-sm);font-weight:600;font-size:13.5px;
+  background:var(--surface-2);color:var(--ink-soft);border:1px solid var(--border);
+  transition:all var(--speed);white-space:nowrap;
+}
+.btn:hover{border-color:var(--border-strong);background:var(--surface-3)}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--royal);color:#fff;border-color:var(--royal)}
+.btn-primary:hover{background:var(--royal-deep);border-color:var(--royal-deep)}
+.btn-danger{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-danger:hover{filter:brightness(.93)}
+.btn-ghost{background:transparent;border-color:transparent}
+.btn-ghost:hover{background:var(--surface-3)}
+.btn-sm{padding:6px 11px;font-size:12.5px;border-radius:8px}
+.btn-icon{width:38px;height:38px;padding:0;border-radius:10px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+.chip{
+  display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:99px;
+  font-size:12px;font-weight:600;line-height:1.6;
+}
+.chip .dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex:none}
+.chip-green{background:var(--green-soft);color:var(--green)}
+.chip-red{background:var(--red-soft);color:var(--red)}
+.chip-amber{background:var(--amber-soft);color:var(--amber)}
+.chip-blue{background:var(--royal-soft);color:var(--royal)}
+.chip-gray{background:var(--surface-3);color:var(--muted)}
+
+.card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);
+}
+.card-pad{padding:20px}
+
+/* Glass surface used on header & overlays */
+.glass{
+  background:var(--glass);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  border:1px solid var(--glass-brd);
+}
+
+/* SVG icon sizing */
+.ic{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.ic-sm{width:15px;height:15px}
+.ic-lg{width:22px;height:22px}
+
+/* Form fields */
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.field label{font-size:12.5px;font-weight:600;color:var(--ink-soft)}
+.input,.select,.textarea{
+  width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--surface-2);color:var(--ink);transition:all var(--speed);
+}
+.input:focus,.select:focus,.textarea:focus{
+  outline:none;border-color:var(--royal);background:var(--surface);
+  box-shadow:0 0 0 3px var(--royal-soft);
+}
+.textarea{resize:vertical;min-height:120px;line-height:1.55}
+
+/* Tables */
+.tbl-wrap{overflow-x:auto;border-radius:var(--radius)}
+table.tbl{width:100%;border-collapse:collapse;font-size:13.2px;min-width:680px}
+table.tbl th{
+  text-align:left;padding:11px 14px;font-size:11px;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--muted);background:var(--surface-2);
+  border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;
+}
+table.tbl th.no-sort{cursor:default}
+table.tbl th .sortarrow{opacity:.4;font-size:9px;margin-left:3px}
+table.tbl td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+table.tbl tr:last-child td{border-bottom:none}
+table.tbl tbody tr{transition:background var(--speed)}
+table.tbl tbody tr:hover{background:var(--surface-2)}
+
+/* Focus visibility for accessibility */
+:focus-visible{outline:2px solid var(--royal);outline-offset:2px;border-radius:4px}
+
+/* ============================================================
+   4. LOGIN SCREEN
+   ============================================================ */
+#login{
+  position:fixed;inset:0;z-index:60;display:flex;
+  background:
+    radial-gradient(1200px 600px at 85% -10%,rgba(30,80,200,.35),transparent 60%),
+    radial-gradient(900px 600px at -10% 110%,rgba(11,146,181,.28),transparent 55%),
+    linear-gradient(135deg,#08152b 0%,#0d2350 55%,#10336e 100%);
+  color:#eaf1fb;overflow:auto;
+}
+.login-left{
+  flex:1;display:flex;flex-direction:column;justify-content:space-between;
+  padding:48px 56px;min-width:0;
+}
+.login-right{
+  width:min(460px,100%);display:flex;align-items:center;justify-content:center;
+  padding:32px;
+}
+.login-brand{display:flex;align-items:center;gap:13px;font-weight:800;font-size:19px;letter-spacing:.01em}
+.login-logo{
+  width:46px;height:46px;border-radius:13px;flex:none;display:grid;place-items:center;
+  background:linear-gradient(145deg,#2f6dff,#0bb6d8);box-shadow:0 8px 24px rgba(20,80,220,.5);
+}
+.login-hero h1{font-size:clamp(28px,4vw,46px);line-height:1.08;font-weight:800;letter-spacing:-.02em;max-width:15ch}
+.login-hero p{margin-top:18px;color:#b6c8e6;max-width:46ch;font-size:15px}
+.login-stats{display:flex;gap:34px;margin-top:34px;flex-wrap:wrap}
+.login-stats .v{font-size:26px;font-weight:800;letter-spacing:-.01em}
+.login-stats .l{font-size:12px;color:#8fa6c9;text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+.login-foot{font-size:12px;color:#7d92b6}
+.login-card{
+  width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);
+  border-radius:22px;padding:34px 30px;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+  box-shadow:0 30px 70px rgba(0,0,0,.4);
+}
+.login-card h2{font-size:21px;font-weight:800}
+.login-card .sub{color:#a9bee0;font-size:13.5px;margin-top:4px;margin-bottom:22px}
+.login-card .field label{color:#cdddf5}
+.login-card .input{background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.18);color:#fff}
+.login-card .input::placeholder{color:#8da6cc}
+.login-card .input:focus{border-color:#5b9bff;box-shadow:0 0 0 3px rgba(70,130,240,.3);background:rgba(255,255,255,.12)}
+.login-row{display:flex;align-items:center;justify-content:space-between;margin:4px 0 18px;font-size:12.5px}
+.login-row label{display:flex;align-items:center;gap:7px;color:#c7d7f0;cursor:pointer}
+.login-row a{color:#7fb0ff}
+.demo-accts{margin-top:22px;border-top:1px solid rgba(255,255,255,.12);padding-top:18px}
+.demo-accts .eyebrow{color:#8fa6c9}
+.demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}
+.demo-acct{
+  text-align:left;padding:9px 11px;border-radius:10px;background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.12);transition:all var(--speed);
+}
+.demo-acct:hover{background:rgba(255,255,255,.12);border-color:#5b9bff;transform:translateY(-1px)}
+.demo-acct .r{font-weight:700;font-size:13px}
+.demo-acct .u{font-size:11px;color:#9fb6d8}
+.login-dark-toggle{position:absolute;top:22px;right:26px}
+@media(max-width:860px){
+  #login{flex-direction:column}
+  .login-left{padding:34px 26px 8px}
+  .login-stats{gap:22px}
+  .login-right{padding:18px 22px 40px}
+}
+
+/* ============================================================
+   5. APP SHELL
+   ============================================================ */
+#app{display:none}
+#app.on{display:block}
+
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);z-index:40;
+  background:linear-gradient(178deg,#0c1d3b 0%,#0a182f 60%,#08152a 100%);
+  color:#c4d2e8;display:flex;flex-direction:column;
+  border-right:1px solid rgba(255,255,255,.06);transition:transform var(--speed);
+}
+.sb-brand{display:flex;align-items:center;gap:11px;padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.07)}
+.sb-logo{width:38px;height:38px;border-radius:11px;flex:none;display:grid;place-items:center;background:linear-gradient(145deg,#2f6dff,#0bb6d8);box-shadow:0 6px 18px rgba(20,80,220,.45)}
+.sb-brand .nm{font-weight:800;font-size:16px;color:#fff;letter-spacing:.01em}
+.sb-brand .tg{font-size:10.5px;color:#7e94b8;letter-spacing:.04em}
+.sb-nav{flex:1;overflow-y:auto;padding:12px 12px 20px}
+.sb-group{margin-top:14px}
+.sb-group:first-child{margin-top:4px}
+.sb-group-title{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#5f7596;padding:8px 12px 6px}
+.sb-link{
+  display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 12px;border-radius:10px;
+  color:#aebdd6;font-weight:600;font-size:13.4px;transition:all .2s;margin-bottom:2px;position:relative;
+}
+.sb-link:hover{background:rgba(255,255,255,.06);color:#fff}
+.sb-link.active{background:linear-gradient(90deg,rgba(47,109,255,.26),rgba(47,109,255,.08));color:#fff}
+.sb-link.active::before{content:"";position:absolute;left:0;top:9px;bottom:9px;width:3px;border-radius:3px;background:#4f8dff}
+.sb-link .ic{opacity:.9}
+.sb-badge{margin-left:auto;background:var(--red);color:#fff;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:99px;min-width:19px;text-align:center}
+.sb-foot{padding:14px 16px;border-top:1px solid rgba(255,255,255,.07);font-size:11px;color:#6f86aa}
+.sb-health{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.sb-health .pulse{width:8px;height:8px;border-radius:50%;background:#33c46a;box-shadow:0 0 0 0 rgba(51,196,106,.6);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(51,196,106,.55)}70%{box-shadow:0 0 0 7px rgba(51,196,106,0)}100%{box-shadow:0 0 0 0 rgba(51,196,106,0)}}
+
+.main{margin-left:var(--sidebar-w);min-height:100vh;display:flex;flex-direction:column}
+
+/* Header */
+.topbar{
+  position:sticky;top:0;z-index:30;height:var(--header-h);
+  display:flex;align-items:center;gap:14px;padding:0 24px;
+  background:var(--glass);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);
+}
+.hamb{display:none}
+.crumbs{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--muted);font-weight:600}
+.crumbs .cur{color:var(--ink)}
+.crumbs .sep{opacity:.5}
+.search-global{
+  margin-left:auto;position:relative;width:min(330px,34vw);
+}
+.search-global .ic{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.search-global input{padding-left:36px;height:40px}
+.search-global kbd{
+  position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--muted);
+  background:var(--surface-3);border:1px solid var(--border);border-radius:6px;padding:1px 6px;font-family:var(--mono)
+}
+.topbar-actions{display:flex;align-items:center;gap:8px}
+.notif-wrap{position:relative}
+.notif-dot{position:absolute;top:7px;right:7px;width:8px;height:8px;border-radius:50%;background:var(--red);border:2px solid var(--surface)}
+.userchip{display:flex;align-items:center;gap:9px;padding:5px 9px 5px 5px;border-radius:99px;border:1px solid var(--border);background:var(--surface-2);transition:all var(--speed)}
+.userchip:hover{border-color:var(--border-strong)}
+.avatar{width:32px;height:32px;border-radius:50%;flex:none;display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px;background:linear-gradient(145deg,#2f6dff,#0bb6d8)}
+.userchip .nm{font-size:13px;font-weight:700;line-height:1.1}
+.userchip .rl{font-size:10.5px;color:var(--muted)}
+
+/* Content area */
+.content{padding:24px;max-width:1400px;width:100%;margin:0 auto;flex:1}
+.view{display:none;animation:fade .35s ease}
+.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.page-head h1{font-size:23px;font-weight:800;letter-spacing:-.02em}
+.page-head p{color:var(--muted);font-size:13.5px;margin-top:3px}
+.page-actions{display:flex;gap:9px;flex-wrap:wrap}
+
+.appfoot{
+  margin-top:auto;padding:18px 24px;border-top:1px solid var(--border);color:var(--muted);
+  font-size:12.5px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+}
+.appfoot a{font-weight:600}
+
+/* ============================================================
+   6. GRID + STAT CARDS
+   ============================================================ */
+.grid{display:grid;gap:16px}
+.stat-grid{grid-template-columns:repeat(4,1fr)}
+.stat{position:relative;overflow:hidden;padding:18px}
+.stat .top{display:flex;align-items:center;justify-content:space-between}
+.stat .ico{width:40px;height:40px;border-radius:11px;display:grid;place-items:center}
+.stat .val{font-size:27px;font-weight:800;letter-spacing:-.02em;margin-top:12px;line-height:1}
+.stat .lbl{font-size:12.5px;color:var(--muted);font-weight:600;margin-top:5px}
+.stat .delta{font-size:11.5px;font-weight:700;display:inline-flex;align-items:center;gap:3px;margin-top:9px;padding:2px 7px;border-radius:7px}
+.stat .delta.up{color:var(--green);background:var(--green-soft)}
+.stat .delta.down{color:var(--red);background:var(--red-soft)}
+.stat .spark{position:absolute;right:0;bottom:0;width:96px;height:42px;opacity:.5}
+
+.two-col{grid-template-columns:1.6fr 1fr}
+.three-col{grid-template-columns:repeat(3,1fr)}
+
+.panel-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+.panel-head h3{font-size:15px;font-weight:700}
+.panel-head .sub{font-size:12px;color:var(--muted)}
+.panel-body{padding:18px 20px}
+
+/* Charts */
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;font-size:12px;color:var(--ink-soft)}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:6px;vertical-align:-1px}
+.bar-track{height:8px;border-radius:99px;background:var(--surface-3);overflow:hidden}
+.bar-fill{height:100%;border-radius:99px;transition:width 1s cubic-bezier(.2,.8,.2,1)}
+
+/* Mini KPI row */
+.kpi-row{display:flex;gap:10px;flex-wrap:wrap}
+.kpi{flex:1;min-width:120px;padding:13px 15px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border)}
+.kpi .v{font-size:19px;font-weight:800}
+.kpi .l{font-size:11.5px;color:var(--muted);margin-top:2px}
+
+/* ============================================================
+   7. AI DETECTION MODULE
+   ============================================================ */
+.detect-grid{display:grid;grid-template-columns:1fr;gap:18px}
+.metadata-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;padding:12px 14px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border);font-weight:600;font-size:13.5px;color:var(--ink-soft);transition:all var(--speed)}
+.metadata-toggle:hover{border-color:var(--border-strong)}
+.metadata-toggle .ic.chev{transition:transform var(--speed)}
+.metadata-toggle.open .ic.chev{transform:rotate(180deg)}
+.metadata-body{display:none;margin-top:12px;padding:16px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border)}
+.metadata-body.open{display:block;animation:fade .3s}
+.meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.seg{display:inline-flex;background:var(--surface-3);border-radius:9px;padding:3px;border:1px solid var(--border)}
+.seg button{padding:6px 12px;border-radius:7px;font-size:12.5px;font-weight:600;color:var(--muted);transition:all .2s}
+.seg button.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-sm)}
+
+/* Loading / pipeline */
+.scan-box{padding:40px 24px;text-align:center}
+.scan-ring{width:64px;height:64px;margin:0 auto 18px;position:relative}
+.scan-ring svg{transform:rotate(-90deg)}
+.scan-ring .spin{width:64px;height:64px;border:4px solid var(--royal-soft);border-top-color:var(--royal);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.scan-steps{max-width:340px;margin:18px auto 0;text-align:left}
+.scan-step{display:flex;align-items:center;gap:11px;padding:8px 4px;color:var(--muted);font-size:13.5px;font-weight:600;opacity:.45;transition:all .3s}
+.scan-step.run{opacity:1;color:var(--ink)}
+.scan-step.done{opacity:1;color:var(--green)}
+.scan-step .mk{width:22px;height:22px;border-radius:50%;flex:none;display:grid;place-items:center;border:2px solid var(--border-strong);font-size:11px}
+.scan-step.run .mk{border-color:var(--royal);color:var(--royal)}
+.scan-step.done .mk{border-color:var(--green);background:var(--green);color:#fff}
+
+/* Result */
+#detectResult{display:none}
+#detectResult.show{display:block;animation:fade .4s}
+.verdict{display:flex;align-items:center;gap:18px;padding:22px 24px;border-radius:16px;color:#fff;position:relative;overflow:hidden}
+.verdict.genuine{background:linear-gradient(120deg,#0f9e47,#15a24a)}
+.verdict.fraud{background:linear-gradient(120deg,#c4241a,#e0463b)}
+.verdict.review{background:linear-gradient(120deg,#c47a08,#e0991a)}
+.verdict .vbadge{width:62px;height:62px;border-radius:16px;background:rgba(255,255,255,.2);display:grid;place-items:center;flex:none}
+.verdict h2{font-size:24px;font-weight:800;letter-spacing:.01em}
+.verdict p{opacity:.9;font-size:13.5px;margin-top:2px}
+.verdict .vscore{margin-left:auto;text-align:right}
+.verdict .vscore .n{font-size:34px;font-weight:800;line-height:1}
+.verdict .vscore .t{font-size:11px;opacity:.85;text-transform:uppercase;letter-spacing:.08em}
+
+.highlight-text{line-height:1.85;font-size:14px;color:var(--ink-soft)}
+.kw{background:var(--red-soft);color:var(--red);font-weight:700;padding:1px 5px;border-radius:5px;border-bottom:2px solid var(--red);cursor:help}
+.kw.warn{background:var(--amber-soft);color:var(--amber);border-color:var(--amber)}
+
+.gauge-wrap{text-align:center;position:relative}
+.gauge-label{margin-top:-18px}
+.gauge-label .n{font-size:30px;font-weight:800}
+.gauge-label .t{font-size:11.5px;color:var(--muted)}
+
+.feature-row{display:flex;align-items:center;gap:12px;margin-bottom:13px}
+.feature-row .nm{width:138px;font-size:12.8px;font-weight:600;color:var(--ink-soft);flex:none}
+.feature-row .track{flex:1}
+.feature-row .pct{width:42px;text-align:right;font-size:12.5px;font-weight:700}
+
+/* ============================================================
+   8. MODALS / DRAWER / TOAST
+   ============================================================ */
+.overlay{position:fixed;inset:0;background:rgba(6,15,28,.55);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);z-index:50;display:none;align-items:center;justify-content:center;padding:20px}
+.overlay.on{display:flex;animation:fade .2s}
+.modal{width:min(560px,100%);max-height:90vh;overflow:auto;background:var(--surface);border-radius:18px;box-shadow:var(--shadow-lg);border:1px solid var(--border);animation:pop .28s}
+.modal.wide{width:min(760px,100%)}
+@keyframes pop{from{opacity:0;transform:scale(.96) translateY(10px)}to{opacity:1;transform:none}}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border)}
+.modal-head h3{font-size:17px;font-weight:700}
+.modal-body{padding:22px}
+.modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:16px 22px;border-top:1px solid var(--border)}
+
+/* Drawer (notifications) */
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(380px,100%);background:var(--surface);z-index:55;box-shadow:var(--shadow-lg);border-left:1px solid var(--border);transform:translateX(100%);transition:transform .32s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column}
+.drawer.on{transform:none}
+.drawer-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border)}
+.drawer-head h3{font-size:16px;font-weight:700}
+.drawer-body{flex:1;overflow-y:auto;padding:8px}
+.notif-item{display:flex;gap:12px;padding:13px;border-radius:12px;transition:background .2s}
+.notif-item:hover{background:var(--surface-2)}
+.notif-item .ni{width:36px;height:36px;border-radius:10px;flex:none;display:grid;place-items:center}
+.notif-item .nt{font-size:13.2px;font-weight:600}
+.notif-item .nm{font-size:12.2px;color:var(--muted);margin-top:2px}
+.notif-item .ng{font-size:11px;color:var(--muted);margin-top:4px}
+
+.toast-wrap{position:fixed;bottom:22px;right:22px;z-index:70;display:flex;flex-direction:column;gap:10px;max-width:340px}
+.toast{display:flex;align-items:flex-start;gap:11px;padding:13px 15px;border-radius:12px;background:var(--surface);box-shadow:var(--shadow-lg);border:1px solid var(--border);border-left:4px solid var(--royal);animation:slidein .35s}
+.toast.ok{border-left-color:var(--green)}
+.toast.err{border-left-color:var(--red)}
+.toast.warn{border-left-color:var(--amber)}
+.toast .tt{font-size:13.5px;font-weight:700}
+.toast .tm{font-size:12.5px;color:var(--muted);margin-top:1px}
+@keyframes slidein{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+
+/* ============================================================
+   9. MISC MODULES (pipeline, analytics, etc.)
+   ============================================================ */
+.pipeline{display:flex;flex-direction:column;gap:0;max-width:560px;margin:0 auto}
+.pipe-node{display:flex;align-items:center;gap:16px;padding:14px 18px;border-radius:14px;background:var(--surface-2);border:1px solid var(--border);transition:all .4s;position:relative}
+.pipe-node.lit{border-color:var(--royal);background:var(--royal-soft);box-shadow:0 0 0 3px var(--royal-soft)}
+.pipe-node .pn{width:42px;height:42px;border-radius:12px;flex:none;display:grid;place-items:center;background:var(--surface);border:1px solid var(--border);color:var(--royal)}
+.pipe-node.lit .pn{background:var(--royal);color:#fff;border-color:var(--royal)}
+.pipe-node .pt{font-weight:700;font-size:14px}
+.pipe-node .pd{font-size:12px;color:var(--muted)}
+.pipe-arrow{height:22px;width:2px;background:var(--border-strong);margin:0 auto;position:relative}
+.pipe-arrow::after{content:"";position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid var(--border-strong)}
+
+.heatmap{display:grid;grid-template-columns:auto repeat(7,1fr);gap:4px;font-size:11px}
+.heat-cell{aspect-ratio:1.4;border-radius:5px;display:grid;place-items:center;font-weight:700;color:#fff;font-size:11px}
+.heat-lbl{display:grid;place-items:center;color:var(--muted);font-weight:600}
+
+.kwbar{display:flex;align-items:center;gap:11px;margin-bottom:10px}
+.kwbar .nm{width:130px;font-size:12.5px;font-weight:600;flex:none}
+.kwbar .track{flex:1}
+.kwbar .ct{width:34px;text-align:right;font-size:12px;font-weight:700;color:var(--muted)}
+
+.timeline{position:relative;padding-left:26px}
+.timeline::before{content:"";position:absolute;left:8px;top:4px;bottom:4px;width:2px;background:var(--border)}
+.tl-item{position:relative;padding-bottom:18px}
+.tl-item:last-child{padding-bottom:0}
+.tl-item .tl-dot{position:absolute;left:-22px;top:3px;width:13px;height:13px;border-radius:50%;border:2.5px solid var(--surface);background:var(--royal)}
+.tl-item .tl-t{font-size:13px;font-weight:600}
+.tl-item .tl-m{font-size:12px;color:var(--muted)}
+.tl-item .tl-g{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* Pagination */
+.pager{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;flex-wrap:wrap}
+.pager .pages{display:flex;gap:5px}
+.pager .pg{min-width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:var(--surface);font-weight:600;font-size:13px}
+.pager .pg.on{background:var(--royal);color:#fff;border-color:var(--royal)}
+.pager .info{font-size:12.5px;color:var(--muted)}
+
+/* Filter bar */
+.filterbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.filterbar .search{position:relative;flex:1;min-width:200px}
+.filterbar .search .ic{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.filterbar .search input{padding-left:36px}
+.filterbar .select{width:auto;min-width:135px}
+
+/* Empty / skeleton */
+.empty{text-align:center;padding:50px 20px;color:var(--muted)}
+.empty .ic{width:48px;height:48px;margin:0 auto 14px;opacity:.5;stroke-width:1.4}
+.empty h4{font-size:15px;color:var(--ink-soft);font-weight:700}
+.empty p{font-size:13px;margin-top:4px}
+.skeleton{background:linear-gradient(90deg,var(--surface-2) 25%,var(--surface-3) 50%,var(--surface-2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:8px}
+@keyframes shimmer{to{background-position:-200% 0}}
+
+/* Switch */
+.switch{position:relative;width:42px;height:24px;flex:none}
+.switch input{opacity:0;width:0;height:0}
+.switch .sl{position:absolute;inset:0;background:var(--border-strong);border-radius:99px;transition:.3s;cursor:pointer}
+.switch .sl::before{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:.3s;box-shadow:var(--shadow-sm)}
+.switch input:checked + .sl{background:var(--royal)}
+.switch input:checked + .sl::before{transform:translateX(18px)}
+
+.settings-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 0;border-bottom:1px solid var(--border)}
+.settings-row:last-child{border-bottom:none}
+.settings-row .st{font-weight:600;font-size:13.8px}
+.settings-row .sm{font-size:12.5px;color:var(--muted);margin-top:2px}
+
+.range{-webkit-appearance:none;appearance:none;height:6px;border-radius:99px;background:var(--surface-3);outline:none;width:200px}
+.range::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--royal);cursor:pointer;border:3px solid var(--surface);box-shadow:var(--shadow-sm)}
+.range::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--royal);cursor:pointer;border:3px solid var(--surface)}
+
+/* Onboarding tour */
+.tour{position:fixed;z-index:65;width:300px;background:var(--surface);border-radius:14px;box-shadow:var(--shadow-lg);border:1px solid var(--border);padding:16px;display:none}
+.tour.on{display:block;animation:pop .3s}
+.tour h4{font-size:14.5px;font-weight:700}
+.tour p{font-size:12.8px;color:var(--muted);margin:6px 0 12px}
+.tour .tour-foot{display:flex;align-items:center;justify-content:space-between}
+.tour .dots{display:flex;gap:5px}
+.tour .dots i{width:7px;height:7px;border-radius:50%;background:var(--border-strong)}
+.tour .dots i.on{background:var(--royal)}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:18px;overflow-x:auto}
+.tab{padding:10px 14px;font-weight:600;font-size:13.2px;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s}
+.tab.on{color:var(--royal);border-bottom-color:var(--royal)}
+.tab:hover{color:var(--ink)}
+
+/* Report print sheet */
+.report-sheet{background:#fff;color:#0a1a33;border-radius:10px;padding:38px;max-width:820px;margin:0 auto;box-shadow:var(--shadow-md);border:1px solid var(--border)}
+.report-sheet h1{font-size:22px;color:#0a1a33}
+.report-sheet table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12.5px}
+.report-sheet th,.report-sheet td{border:1px solid #d8e0ec;padding:7px 10px;text-align:left;color:#0a1a33}
+.report-sheet th{background:#f1f5fb}
+
+/* ============================================================
+   10. RESPONSIVE
+   ============================================================ */
+@media(max-width:1100px){
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+  .two-col,.three-col{grid-template-columns:1fr}
+}
+@media(max-width:820px){
+  :root{--sidebar-w:260px}
+  .sidebar{transform:translateX(-100%);box-shadow:var(--shadow-lg)}
+  .sidebar.open{transform:none}
+  .main{margin-left:0}
+  .hamb{display:inline-flex}
+  .search-global{display:none}
+  .userchip .nm,.userchip .rl{display:none}
+  .meta-grid{grid-template-columns:1fr}
+  .content{padding:16px}
+}
+@media(max-width:520px){
+  .stat-grid{grid-template-columns:1fr}
+  .verdict{flex-wrap:wrap}
+  .verdict .vscore{margin-left:0}
+  .page-head h1{font-size:20px}
+}
+.sb-backdrop{display:none;position:fixed;inset:0;background:rgba(6,15,28,.5);z-index:39}
+.sb-backdrop.on{display:block}
+
+@media print{
+  .sidebar,.topbar,.appfoot,.page-actions,.no-print{display:none!important}
+  .main{margin-left:0}
+  .content{padding:0;max-width:none}
+  body{background:#fff}
+  .report-sheet{box-shadow:none;border:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms!important;transition-duration:.001ms!important}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== ICON SPRITE (inline SVG symbols, used via <use>) ===== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+ <defs>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10l9-7 9 7"/><path d="M5 9v11h14V9"/></symbol>
+  <symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><path d="M7 12h10"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+  <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/></symbol>
+  <symbol id="i-db" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></symbol>
+  <symbol id="i-flow" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="12" r="3"/><path d="M9 6h3a3 3 0 013 3M9 18h3a3 3 0 003-3"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 4-5"/></symbol>
+  <symbol id="i-report" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/><path d="M16 5.5a3 3 0 010 5.8M21 20c0-2.6-1.6-4.3-4-4.8"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.6 1.6 0 00-2.7 1.1V21a2 2 0 11-4 0v-.1A1.6 1.6 0 006.6 19l-.1.1a2 2 0 11-2.8-2.8l.1-.1A1.6 1.6 0 003 13.4H3a2 2 0 110-4h.1A1.6 1.6 0 004.6 7l-.1-.1a2 2 0 112.8-2.8l.1.1A1.6 1.6 0 0010 4.6V4a2 2 0 114 0v.1a1.6 1.6 0 002.7 1.1l.1-.1a2 2 0 112.8 2.8l-.1.1a1.6 1.6 0 001.1 2.7H21a2 2 0 110 4h-.1a1.6 1.6 0 00-1.5 1z"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 014.5 1.5c0 1.7-2.5 2-2.5 3.5M12 17h.01"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></symbol>
+  <symbol id="i-chev-d" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-chev-r" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 21V9M7 14l5-5 5 5M5 3h14"/></symbol>
+  <symbol id="i-print" viewBox="0 0 24 24"><path d="M6 9V3h12v6M6 18H4a2 2 0 01-2-2v-4a2 2 0 012-2h16a2 2 0 012 2v4a2 2 0 01-2 2h-2M6 14h12v7H6z"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><path d="M3 4h18l-7 8v6l-4 2v-8z"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+  <symbol id="i-activity" viewBox="0 0 24 24"><path d="M3 12h4l3 8 4-16 3 8h4"/></symbol>
+  <symbol id="i-trend-up" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8M17 7h4v4"/></symbol>
+  <symbol id="i-trend-dn" viewBox="0 0 24 24"><path d="M3 7l6 6 4-4 8 8M17 17h4v-4"/></symbol>
+  <symbol id="i-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></symbol>
+  <symbol id="i-verified" viewBox="0 0 24 24"><path d="M12 2l2.4 1.8 3-.2 1 2.8 2.5 1.6-.9 2.9.9 2.9-2.5 1.6-1 2.8-3-.2L12 22l-2.4-1.8-3 .2-1-2.8-2.5-1.6.9-2.9-.9-2.9 2.5-1.6 1-2.8 3 .2z"/><path d="M9 12l2 2 4-4"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><path d="M12 21s-7-6.5-7-11a7 7 0 0114 0c0 4.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2L21 2M16 7l3 3M14 9l2 2"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></symbol>
+  <symbol id="i-arrow-r" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-3-6.7L21 8M21 3v5h-5"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M3 12h5l2 3h4l2-3h5"/><path d="M5 5h14l2 7v7H3v-7z"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21s-8-5-10-10A5 5 0 0112 6a5 5 0 0110 5c-2 5-10 10-10 10z"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3 11V4a1 1 0 011-1h7l9 9-8 8z"/><circle cx="7.5" cy="7.5" r="1.3"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></symbol>
+ </defs>
+</svg>
+
+<!-- ================= LOGIN SCREEN ================= -->
+<section id="login">
+  <button class="btn btn-icon login-dark-toggle glass" id="loginThemeBtn" title="Toggle theme" style="color:#eaf1fb">
+    <svg class="ic"><use href="#i-moon"/></svg>
+  </button>
+  <div class="login-left">
+    <div class="login-brand">
+      <span class="login-logo"><svg class="ic ic-lg" style="color:#fff"><use href="#i-shield"/></svg></span>
+      FraudGuard&nbsp;AI
+    </div>
+    <div class="login-hero">
+      <div class="eyebrow" style="color:#7fb0ff;margin-bottom:14px">Consumer Protection Intelligence</div>
+      <h1>Detect fraudulent Marketplace listings before buyers do.</h1>
+      <p>An NLP and BERT-driven analysis console that classifies Facebook Marketplace business posts as genuine or fraudulent — with transparent, explainable scoring built for analysts and moderators.</p>
+      <div class="login-stats">
+        <div><div class="v tnum">96.4%</div><div class="l">Model accuracy</div></div>
+        <div><div class="v tnum">12,480</div><div class="l">Posts screened</div></div>
+        <div><div class="v tnum">3</div><div class="l">Models compared</div></div>
+      </div>
+    </div>
+    <div class="login-foot">© 2026 FraudGuard AI · Research prototype · Built on the Facebook Marketplace fraud-detection proposal.</div>
+  </div>
+  <div class="login-right">
+    <div class="login-card">
+      <h2>Sign in to the console</h2>
+      <div class="sub">Use a demo role below or enter any credentials.</div>
+      <div class="field">
+        <label for="loginUser">Username</label>
+        <input class="input" id="loginUser" placeholder="e.g. admin" autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="loginPass">Password</label>
+        <input class="input" id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <div class="login-row">
+        <label><input type="checkbox" id="loginRemember"> Remember me</label>
+        <a href="#" id="forgotLink">Forgot password?</a>
+      </div>
+      <button class="btn btn-primary" style="width:100%;padding:12px" id="loginBtn">
+        <svg class="ic ic-sm"><use href="#i-lock"/></svg> Sign in securely
+      </button>
+      <div class="demo-accts">
+        <div class="eyebrow">Demo accounts — tap to autofill</div>
+        <div class="demo-grid" id="demoGrid"></div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- ================= APPLICATION ================= -->
+<div id="app">
+  <div class="sb-backdrop" id="sbBackdrop"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-brand">
+      <span class="sb-logo"><svg class="ic" style="color:#fff"><use href="#i-shield"/></svg></span>
+      <div><div class="nm">FraudGuard AI</div><div class="tg">Marketplace Intelligence</div></div>
+    </div>
+    <nav class="sb-nav" id="sbNav">
+      <div class="sb-group">
+        <div class="sb-group-title">Overview</div>
+        <button class="sb-link active" data-view="dashboard"><svg class="ic"><use href="#i-home"/></svg> Dashboard</button>
+        <button class="sb-link" data-view="detect"><svg class="ic"><use href="#i-scan"/></svg> AI Detection</button>
+        <button class="sb-link" data-view="analytics"><svg class="ic"><use href="#i-chart"/></svg> Fraud Analytics</button>
+      </div>
+      <div class="sb-group">
+        <div class="sb-group-title">Operations</div>
+        <button class="sb-link" data-view="posts"><svg class="ic"><use href="#i-list"/></svg> Posts <span class="sb-badge" id="navReviewBadge">0</span></button>
+        <button class="sb-link" data-view="dataset"><svg class="ic"><use href="#i-db"/></svg> Dataset</button>
+        <button class="sb-link" data-view="sellers"><svg class="ic"><use href="#i-tag"/></svg> Sellers Registry</button>
+      </div>
+      <div class="sb-group">
+        <div class="sb-group-title">Model & Science</div>
+        <button class="sb-link" data-view="models"><svg class="ic"><use href="#i-cpu"/></svg> Models Comparison</button>
+        <button class="sb-link" data-view="pipeline"><svg class="ic"><use href="#i-flow"/></svg> NLP Pipeline</button>
+      </div>
+      <div class="sb-group">
+        <div class="sb-group-title">Administration</div>
+        <button class="sb-link" data-view="reports"><svg class="ic"><use href="#i-report"/></svg> Reports</button>
+        <button class="sb-link" data-view="users"><svg class="ic"><use href="#i-users"/></svg> User Management</button>
+        <button class="sb-link" data-view="settings"><svg class="ic"><use href="#i-settings"/></svg> Settings</button>
+        <button class="sb-link" data-view="help"><svg class="ic"><use href="#i-help"/></svg> Help Center</button>
+      </div>
+    </nav>
+    <div class="sb-foot">
+      <div class="sb-health"><span class="pulse"></span> System operational</div>
+      <div>Model v3.2 · BERT-base · v2026.06</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="topbar">
+      <button class="btn btn-icon btn-ghost hamb" id="hambBtn" aria-label="Open menu"><svg class="ic"><use href="#i-menu"/></svg></button>
+      <div class="crumbs"><span>FraudGuard</span><span class="sep">/</span><span class="cur" id="crumbCur">Dashboard</span></div>
+      <div class="search-global">
+        <svg class="ic ic-sm"><use href="#i-search"/></svg>
+        <input class="input" id="globalSearch" placeholder="Search posts, sellers, keywords…">
+        <kbd>/</kbd>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-icon btn-ghost" id="themeBtn" title="Toggle dark mode"><svg class="ic"><use href="#i-moon"/></svg></button>
+        <div class="notif-wrap">
+          <button class="btn btn-icon btn-ghost" id="notifBtn" title="Notifications"><svg class="ic"><use href="#i-bell"/></svg><span class="notif-dot" id="notifDot"></span></button>
+        </div>
+        <button class="userchip" id="userBtn">
+          <span class="avatar" id="userAvatar">AD</span>
+          <span><span class="nm" id="userName">Admin</span><br><span class="rl" id="userRole">Administrator</span></span>
+          <svg class="ic ic-sm" style="color:var(--muted)"><use href="#i-chev-d"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="content">
+      <!-- DASHBOARD -->
+      <section class="view active" id="view-dashboard">
+        <div class="page-head">
+          <div><h1>Dashboard</h1><p>Live overview of Marketplace screening activity and model performance.</p></div>
+          <div class="page-actions">
+            <button class="btn" id="dashRefresh"><svg class="ic ic-sm"><use href="#i-refresh"/></svg> Refresh</button>
+            <button class="btn btn-primary" data-goto="detect"><svg class="ic ic-sm"><use href="#i-scan"/></svg> Analyze a post</button>
+          </div>
+        </div>
+        <div class="grid stat-grid" id="dashStats"></div>
+        <div class="grid two-col" style="margin-top:16px">
+          <div class="card">
+            <div class="panel-head"><div><h3>Monthly detection trends</h3><div class="sub">Genuine vs fraudulent classifications</div></div>
+              <span class="chip chip-blue"><span class="dot"></span> Last 8 months</span></div>
+            <div class="panel-body" id="trendChart"></div>
+          </div>
+          <div class="card">
+            <div class="panel-head"><h3>Classification split</h3></div>
+            <div class="panel-body" id="splitChart"></div>
+          </div>
+        </div>
+        <div class="grid two-col" style="margin-top:16px">
+          <div class="card">
+            <div class="panel-head"><h3>Fraud by category</h3><span class="sub">Top targeted categories</span></div>
+            <div class="panel-body" id="catChart"></div>
+          </div>
+          <div class="card">
+            <div class="panel-head"><h3>Recent activity</h3></div>
+            <div class="panel-body"><div class="timeline" id="activityFeed"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- AI DETECTION -->
+      <section class="view" id="view-detect">
+        <div class="page-head">
+          <div><h1>AI Detection</h1><p>Paste a Facebook Marketplace post. The engine runs NLP preprocessing and a simulated BERT classifier, then explains the verdict.</p></div>
+        </div>
+        <div class="grid two-col">
+          <div class="card card-pad">
+            <div class="field">
+              <label for="detectInput">Marketplace post text</label>
+              <textarea class="textarea" id="detectInput" style="min-height:170px" placeholder="Paste the listing text here… e.g. 'URGENT!! Invest now and earn 100% guaranteed returns!!'"></textarea>
+            </div>
+            <button class="metadata-toggle" id="metaToggle">
+              <span style="display:flex;align-items:center;gap:9px"><svg class="ic ic-sm"><use href="#i-sliders"/></svg> Advanced metadata signals</span>
+              <svg class="ic ic-sm chev"><use href="#i-chev-d"/></svg>
+            </button>
+            <div class="metadata-body" id="metaBody">
+              <div class="meta-grid">
+                <div>
+                  <label class="eyebrow" style="display:block;margin-bottom:7px">Account age</label>
+                  <div class="seg" data-meta="age"><button data-v="old" class="on">Established</button><button data-v="new">New</button></div>
+                </div>
+                <div>
+                  <label class="eyebrow" style="display:block;margin-bottom:7px">Verification</label>
+                  <div class="seg" data-meta="verified"><button data-v="yes" class="on">Verified</button><button data-v="no">Unverified</button></div>
+                </div>
+                <div>
+                  <label class="eyebrow" style="display:block;margin-bottom:7px">Engagement</label>
+                  <div class="seg" data-meta="engagement"><button data-v="high" class="on">High</button><button data-v="low">Low</button></div>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
+              <button class="btn btn-primary" id="analyzeBtn" style="flex:1;min-width:160px;padding:12px"><svg class="ic ic-sm"><use href="#i-zap"/></svg> Analyze post</button>
+              <button class="btn" id="loadSampleBtn"><svg class="ic ic-sm"><use href="#i-copy"/></svg> Load sample</button>
+            </div>
+            <div style="margin-top:14px"><div class="eyebrow" style="margin-bottom:8px">Quick test cases</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap" id="quickCases"></div>
+            </div>
+          </div>
+
+          <div class="card" id="detectSide">
+            <div class="panel-head"><h3>Analysis</h3><span class="sub" id="detectStatus">Awaiting input</span></div>
+            <div class="panel-body">
+              <div id="detectIdle" class="empty" style="padding:34px 12px">
+                <svg class="ic"><use href="#i-scan"/></svg>
+                <h4>No analysis yet</h4>
+                <p>Enter a post and run the detector to see a verdict, confidence score, and an explanation of the signals that drove it.</p>
+              </div>
+              <div id="detectLoading" style="display:none">
+                <div class="scan-box">
+                  <div class="scan-ring"><div class="spin"></div></div>
+                  <div style="font-weight:700">Running detection pipeline…</div>
+                  <div class="scan-steps" id="scanSteps"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Full-width result -->
+        <div id="detectResult" style="margin-top:16px">
+          <div class="verdict" id="verdictBanner">
+            <span class="vbadge"><svg class="ic ic-lg" style="color:#fff"><use href="#i-shield"/></svg></span>
+            <div><h2 id="verdictLabel">—</h2><p id="verdictSub">—</p></div>
+            <div class="vscore"><div class="n tnum" id="verdictScore">—</div><div class="t">Confidence</div></div>
+          </div>
+          <div class="grid three-col" style="margin-top:16px">
+            <div class="card">
+              <div class="panel-head"><h3>Confidence</h3></div>
+              <div class="panel-body gauge-wrap" id="confGauge"></div>
+            </div>
+            <div class="card">
+              <div class="panel-head"><h3>Fraud risk gauge</h3></div>
+              <div class="panel-body gauge-wrap" id="riskGauge"></div>
+            </div>
+            <div class="card">
+              <div class="panel-head"><h3>Feature breakdown</h3></div>
+              <div class="panel-body" id="featureBreak"></div>
+            </div>
+          </div>
+          <div class="grid two-col" style="margin-top:16px">
+            <div class="card">
+              <div class="panel-head"><h3>Explainable AI</h3><span class="sub">Suspicious tokens highlighted</span></div>
+              <div class="panel-body"><div class="highlight-text" id="highlightOut"></div>
+                <div id="kwSummary" style="margin-top:16px"></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="panel-head"><h3>Verdict detail & action</h3></div>
+              <div class="panel-body" id="verdictDetail"></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+            <button class="btn btn-danger" id="reportPlatformBtn"><svg class="ic ic-sm"><use href="#i-alert"/></svg> Report to platform</button>
+            <button class="btn" id="exportAnalysisBtn"><svg class="ic ic-sm"><use href="#i-download"/></svg> Export analysis</button>
+            <button class="btn" id="addToQueueBtn"><svg class="ic ic-sm"><use href="#i-inbox"/></svg> Send to review queue</button>
+            <button class="btn btn-primary" id="scanAnotherBtn" style="margin-left:auto"><svg class="ic ic-sm"><use href="#i-refresh"/></svg> Scan another post</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- POSTS MANAGEMENT -->
+      <section class="view" id="view-posts">
+        <div class="page-head">
+          <div><h1>Marketplace Posts</h1><p>Review, classify and manage screened Facebook Marketplace listings.</p></div>
+          <div class="page-actions">
+            <button class="btn" id="postsExportBtn"><svg class="ic ic-sm"><use href="#i-download"/></svg> Export CSV</button>
+            <button class="btn" id="postsPrintBtn"><svg class="ic ic-sm"><use href="#i-print"/></svg> Print</button>
+            <button class="btn btn-primary" id="addPostBtn"><svg class="ic ic-sm"><use href="#i-plus"/></svg> Add post</button>
+          </div>
+        </div>
+        <div class="card card-pad">
+          <div class="filterbar">
+            <div class="search"><svg class="ic ic-sm"><use href="#i-search"/></svg><input class="input" id="postsSearch" placeholder="Search post text or seller…"></div>
+            <select class="select" id="filterStatus"><option value="">All status</option><option>Genuine</option><option>Fraudulent</option><option>Pending</option></select>
+            <select class="select" id="filterCategory"></select>
+            <select class="select" id="filterRisk"><option value="">All risk</option><option>Low</option><option>Medium</option><option>High</option></select>
+            <button class="btn btn-ghost" id="clearFilters"><svg class="ic ic-sm"><use href="#i-x"/></svg> Clear</button>
+          </div>
+          <div class="tbl-wrap"><table class="tbl" id="postsTable"><thead></thead><tbody></tbody></table></div>
+          <div class="pager" id="postsPager"></div>
+        </div>
+      </section>
+
+      <!-- DATASET -->
+      <section class="view" id="view-dataset">
+        <div class="page-head">
+          <div><h1>Dataset Management</h1><p>Labelled corpus of Facebook Marketplace posts used for training and evaluation.</p></div>
+          <div class="page-actions">
+            <button class="btn" id="datasetImport"><svg class="ic ic-sm"><use href="#i-upload"/></svg> Import</button>
+            <button class="btn" id="datasetExport"><svg class="ic ic-sm"><use href="#i-download"/></svg> Export JSON</button>
+            <button class="btn" id="datasetBackup"><svg class="ic ic-sm"><use href="#i-refresh"/></svg> Backup</button>
+          </div>
+        </div>
+        <div class="grid stat-grid" id="datasetStats"></div>
+        <div class="grid two-col" style="margin-top:16px">
+          <div class="card"><div class="panel-head"><h3>Category distribution</h3></div><div class="panel-body" id="dsCatChart"></div></div>
+          <div class="card"><div class="panel-head"><h3>Geographic spread</h3><span class="sub">Posts by location</span></div><div class="panel-body" id="dsGeoChart"></div></div>
+        </div>
+        <div class="card card-pad" style="margin-top:16px">
+          <div class="filterbar">
+            <div class="search"><svg class="ic ic-sm"><use href="#i-search"/></svg><input class="input" id="dsSearch" placeholder="Search dataset…"></div>
+            <select class="select" id="dsLabel"><option value="">All labels</option><option>Genuine</option><option>Fraudulent</option></select>
+            <select class="select" id="dsCat"></select>
+          </div>
+          <div class="tbl-wrap"><table class="tbl" id="dsTable"><thead></thead><tbody></tbody></table></div>
+          <div class="pager" id="dsPager"></div>
+        </div>
+      </section>
+
+      <!-- SELLERS REGISTRY -->
+      <section class="view" id="view-sellers">
+        <div class="page-head"><div><h1>Sellers Registry</h1><p>Trusted and blacklisted seller records derived from screening history.</p></div></div>
+        <div class="tabs" id="sellerTabs">
+          <button class="tab on" data-tab="blacklist">Blacklisted</button>
+          <button class="tab" data-tab="trusted">Trusted</button>
+        </div>
+        <div class="card card-pad"><div class="tbl-wrap"><table class="tbl" id="sellerTable"><thead></thead><tbody></tbody></table></div></div>
+      </section>
+
+      <!-- MODELS COMPARISON -->
+      <section class="view" id="view-models">
+        <div class="page-head"><div><h1>AI Models Comparison</h1><p>Benchmarking the three classifiers from the research methodology.</p></div></div>
+        <div class="grid three-col" id="modelCards"></div>
+        <div class="grid two-col" style="margin-top:16px">
+          <div class="card"><div class="panel-head"><h3>Metric comparison</h3><span class="sub">Higher is better</span></div><div class="panel-body" id="modelMetricChart"></div></div>
+          <div class="card"><div class="panel-head"><h3>Speed vs accuracy</h3></div><div class="panel-body" id="modelScatter"></div></div>
+        </div>
+        <div class="card card-pad" style="margin-top:16px">
+          <div class="panel-head" style="padding:0 0 14px"><h3>Full metrics table</h3></div>
+          <div class="tbl-wrap"><table class="tbl" id="modelTable"><thead></thead><tbody></tbody></table></div>
+        </div>
+      </section>
+
+      <!-- NLP PIPELINE -->
+      <section class="view" id="view-pipeline">
+        <div class="page-head">
+          <div><h1>NLP Pipeline</h1><p>How raw post text becomes a classification, stage by stage.</p></div>
+          <div class="page-actions"><button class="btn btn-primary" id="runPipelineBtn"><svg class="ic ic-sm"><use href="#i-zap"/></svg> Run animation</button></div>
+        </div>
+        <div class="grid two-col">
+          <div class="card card-pad"><div class="pipeline" id="pipelineFlow"></div></div>
+          <div class="card">
+            <div class="panel-head"><h3>Stage output</h3><span class="sub" id="pipeStageLabel">Idle</span></div>
+            <div class="panel-body"><pre id="pipeOut" style="font-family:var(--mono);font-size:12.5px;line-height:1.7;white-space:pre-wrap;color:var(--ink-soft);min-height:240px;margin:0">Press "Run animation" to trace a sample post through the pipeline.</pre></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FRAUD ANALYTICS -->
+      <section class="view" id="view-analytics">
+        <div class="page-head"><div><h1>Fraud Analytics</h1><p>Patterns, hotspots and keyword intelligence across screened posts.</p></div></div>
+        <div class="grid two-col">
+          <div class="card"><div class="panel-head"><h3>Detection heatmap</h3><span class="sub">Fraud volume · week × day</span></div><div class="panel-body"><div class="heatmap" id="heatmap"></div><div class="legend" id="heatLegend"></div></div></div>
+          <div class="card"><div class="panel-head"><h3>Top fraud keywords</h3></div><div class="panel-body" id="topKeywords"></div></div>
+        </div>
+        <div class="grid two-col" style="margin-top:16px">
+          <div class="card"><div class="panel-head"><h3>Confidence distribution</h3></div><div class="panel-body" id="confDist"></div></div>
+          <div class="card"><div class="panel-head"><h3>Geographic fraud hotspots</h3><span class="sub">Simulated</span></div><div class="panel-body" id="geoHotspots"></div></div>
+        </div>
+        <div class="card card-pad" style="margin-top:16px">
+          <div class="panel-head" style="padding:0 0 14px"><h3>False positive simulation</h3><span class="sub">Effect of the decision threshold</span></div>
+          <div class="panel-body" id="fpSim" style="padding:0"></div>
+        </div>
+      </section>
+
+      <!-- REPORTS -->
+      <section class="view" id="view-reports">
+        <div class="page-head">
+          <div><h1>Reports</h1><p>Generate and export screening summaries for stakeholders.</p></div>
+          <div class="page-actions">
+            <button class="btn" id="repCsv"><svg class="ic ic-sm"><use href="#i-download"/></svg> CSV</button>
+            <button class="btn" id="repJson"><svg class="ic ic-sm"><use href="#i-download"/></svg> JSON</button>
+            <button class="btn" id="repPrint"><svg class="ic ic-sm"><use href="#i-print"/></svg> Print / PDF</button>
+          </div>
+        </div>
+        <div id="reportSheet"></div>
+      </section>
+
+      <!-- USERS -->
+      <section class="view" id="view-users">
+        <div class="page-head">
+          <div><h1>User Management</h1><p>Roles, permissions and activity for console operators.</p></div>
+          <div class="page-actions"><button class="btn btn-primary" id="addUserBtn"><svg class="ic ic-sm"><use href="#i-plus"/></svg> Add user</button></div>
+        </div>
+        <div class="grid two-col">
+          <div class="card card-pad"><div class="panel-head" style="padding:0 0 14px"><h3>Operators</h3></div><div class="tbl-wrap"><table class="tbl" id="usersTable"><thead></thead><tbody></tbody></table></div></div>
+          <div class="card"><div class="panel-head"><h3>Audit log</h3><span class="sub">Recent actions</span></div><div class="panel-body"><div class="timeline" id="auditLog"></div></div></div>
+        </div>
+        <div class="card card-pad" style="margin-top:16px">
+          <div class="panel-head" style="padding:0 0 14px"><h3>Role permissions</h3></div>
+          <div class="tbl-wrap"><table class="tbl" id="permTable"><thead></thead><tbody></tbody></table></div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="view" id="view-settings">
+        <div class="page-head"><div><h1>Settings</h1><p>Personalise the console and tune detection behaviour.</p></div></div>
+        <div class="grid two-col">
+          <div class="card card-pad">
+            <div class="panel-head" style="padding:0 0 8px"><h3>Appearance & system</h3></div>
+            <div class="settings-row"><div><div class="st">Dark mode</div><div class="sm">Switch between light and dark themes</div></div><label class="switch"><input type="checkbox" id="setDark"><span class="sl"></span></label></div>
+            <div class="settings-row"><div><div class="st">Desktop notifications</div><div class="sm">Alert on new high-risk detections</div></div><label class="switch"><input type="checkbox" id="setNotif" checked><span class="sl"></span></label></div>
+            <div class="settings-row"><div><div class="st">Auto-save forms</div><div class="sm">Keep draft input across sessions</div></div><label class="switch"><input type="checkbox" id="setAutosave" checked><span class="sl"></span></label></div>
+            <div class="settings-row"><div><div class="st">Language</div><div class="sm">Interface language</div></div>
+              <select class="select" id="setLang" style="width:auto"><option>English</option><option>Kinyarwanda</option><option>Français</option><option>Kiswahili</option></select></div>
+          </div>
+          <div class="card card-pad">
+            <div class="panel-head" style="padding:0 0 8px"><h3>Detection engine</h3></div>
+            <div class="settings-row" style="flex-wrap:wrap">
+              <div style="flex:1;min-width:180px"><div class="st">Fraud decision threshold</div><div class="sm">Posts scoring above this are flagged fraudulent</div></div>
+              <div style="text-align:right"><input type="range" class="range" id="setThreshold" min="40" max="90" value="60"><div class="tnum" id="thresholdVal" style="font-weight:800;font-size:18px;margin-top:6px">60%</div></div>
+            </div>
+            <div class="settings-row"><div><div class="st">Active model</div><div class="sm">Classifier used for live detection</div></div>
+              <select class="select" id="setModel" style="width:auto"><option>BERT (contextual)</option><option>Logistic Regression</option><option>Naïve Bayes</option></select></div>
+            <div class="settings-row"><div><div class="st">Highlight sensitivity</div><div class="sm">How aggressively to flag suspicious tokens</div></div>
+              <select class="select" id="setSensitivity" style="width:auto"><option>Balanced</option><option>Strict</option><option>Lenient</option></select></div>
+            <div style="margin-top:14px;display:flex;gap:10px"><button class="btn btn-primary" id="saveSettings">Save changes</button><button class="btn" id="resetSettings">Reset defaults</button></div>
+          </div>
+        </div>
+        <div class="card card-pad" style="margin-top:16px">
+          <div class="panel-head" style="padding:0 0 8px"><h3>Profile</h3></div>
+          <div class="grid three-col">
+            <div class="field"><label>Display name</label><input class="input" id="profName"></div>
+            <div class="field"><label>Email</label><input class="input" id="profEmail" value="operator@fraudguard.rw"></div>
+            <div class="field"><label>Role</label><input class="input" id="profRole" disabled></div>
+          </div>
+          <button class="btn" id="changePass"><svg class="ic ic-sm"><use href="#i-key"/></svg> Change password</button>
+        </div>
+      </section>
+
+      <!-- HELP -->
+      <section class="view" id="view-help">
+        <div class="page-head"><div><h1>Help Center</h1><p>Guides, research background and system information.</p></div></div>
+        <div class="tabs" id="helpTabs">
+          <button class="tab on" data-tab="guide">System guide</button>
+          <button class="tab" data-tab="research">Research summary</button>
+          <button class="tab" data-tab="about">About & references</button>
+          <button class="tab" data-tab="shortcuts">Shortcuts</button>
+        </div>
+        <div id="helpContent"></div>
+      </section>
+    </main>
+
+    <footer class="appfoot">
+      <div>© 2026 FraudGuard AI · Research prototype demonstrating NLP & BERT-based Marketplace fraud detection.</div>
+      <div>Build v2026.06 · <a href="#" data-goto="help">Documentation</a> · <a href="#" id="footLogout">Sign out</a></div>
+    </footer>
+  </div>
+</div>
+
+<!-- NOTIFICATIONS DRAWER -->
+<div class="drawer" id="notifDrawer">
+  <div class="drawer-head"><h3>Notifications</h3>
+    <div style="display:flex;gap:6px"><button class="btn btn-sm btn-ghost" id="markRead">Mark read</button><button class="btn btn-icon btn-ghost" id="closeNotif"><svg class="ic ic-sm"><use href="#i-x"/></svg></button></div>
+  </div>
+  <div class="drawer-body" id="notifList"></div>
+</div>
+
+<!-- MODAL HOST -->
+<div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+
+<!-- TOASTS -->
+<div class="toast-wrap" id="toasts"></div>
+
+<!-- ONBOARDING TOUR -->
+<div class="tour" id="tour"></div>
+
+<script>
+/* ============================================================
+   FRAUDGUARD AI — APPLICATION SCRIPT
+   Block 1: utilities, SVG charts, embedded data
+   ============================================================ */
+'use strict';
+const $  = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
+const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nf  = n => Number(n).toLocaleString('en-US');
+const rwf = n => 'RWF ' + Number(n).toLocaleString('en-US');
+const pad = n => String(n).padStart(2,'0');
+const clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
+
+/* Deterministic PRNG so the demo dataset is stable across reloads */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const rng = mulberry32(20260601);
+const pick = arr => arr[Math.floor(rng()*arr.length)];
+const randInt=(a,b)=>a+Math.floor(rng()*(b-a+1));
+
+/* ---------- SVG chart helpers (theme-aware via CSS vars in inline style) ---------- */
+function donutRing(pct,color,sub){
+  const r=52,c=2*Math.PI*r,off=c*(1-pct/100);
+  return `<div style="position:relative;width:140px;height:140px;margin:4px auto 0">
+    <svg viewBox="0 0 140 140" style="width:140px;height:140px;transform:rotate(-90deg)">
+      <circle cx="70" cy="70" r="${r}" style="fill:none;stroke:var(--surface-3);stroke-width:14"/>
+      <circle cx="70" cy="70" r="${r}" style="fill:none;stroke:${color};stroke-width:14;stroke-linecap:round;stroke-dasharray:${c};stroke-dashoffset:${c};transition:stroke-dashoffset 1.1s cubic-bezier(.2,.8,.2,1)" data-dash="${off}"/>
+    </svg>
+    <div style="position:absolute;inset:0;display:grid;place-items:center;text-align:center">
+      <div><div class="tnum" style="font-size:30px;font-weight:800;line-height:1">${pct}<span style="font-size:16px">%</span></div>
+      <div style="font-size:11px;color:var(--muted)">${sub||''}</div></div>
+    </div></div>`;
+}
+function semiGauge(pct){
+  // half-circle gauge, green->amber->red
+  const r=64, cx=80, cy=82, c=Math.PI*r, off=c*(1-pct/100);
+  const col = pct>=70?'var(--red)':pct>=40?'var(--amber)':'var(--green)';
+  const lbl = pct>=70?'High risk':pct>=40?'Medium risk':'Low risk';
+  return `<div style="position:relative;width:170px;margin:6px auto 0">
+    <svg viewBox="0 0 160 96" style="width:170px;height:104px">
+      <path d="M16 82 A64 64 0 0 1 144 82" style="fill:none;stroke:var(--surface-3);stroke-width:13;stroke-linecap:round"/>
+      <path d="M16 82 A64 64 0 0 1 144 82" style="fill:none;stroke:${col};stroke-width:13;stroke-linecap:round;stroke-dasharray:${c};stroke-dashoffset:${c};transition:stroke-dashoffset 1.1s ease" data-dash="${off}"/>
+    </svg>
+    <div style="text-align:center;margin-top:-30px"><div class="tnum" style="font-size:26px;font-weight:800">${pct}%</div>
+    <div style="font-size:12px;font-weight:700;color:${col}">${lbl}</div></div></div>`;
+}
+function hbars(items,opts={}){
+  const max=opts.max||Math.max(...items.map(i=>i.value),1);
+  return items.map(i=>`<div class="${opts.cls||'feature-row'}">
+    <div class="nm">${esc(i.label)}</div>
+    <div class="track bar-track"><div class="bar-fill" style="width:0;background:${i.color||'var(--royal)'}" data-w="${(i.value/max*100).toFixed(1)}%"></div></div>
+    <div class="pct tnum">${opts.fmt?opts.fmt(i.value):i.value}</div></div>`).join('');
+}
+function vbars(items,opts={}){
+  const W=opts.w||440,H=opts.h||210,pad=30,bw=(W-pad*2)/items.length;
+  const max=Math.max(...items.map(i=>i.value),1);
+  let bars='',labels='';
+  items.forEach((it,idx)=>{
+    const h=(it.value/max)*(H-pad-24), x=pad+idx*bw+bw*0.18, y=H-pad-h;
+    bars+=`<rect x="${x}" y="${H-pad}" width="${bw*0.64}" height="0" rx="4" style="fill:${it.color||'var(--royal)'};transition:height 1s ease,y 1s ease" data-y="${y}" data-h="${h}"/>`;
+    labels+=`<text x="${x+bw*0.32}" y="${H-pad+15}" text-anchor="middle" style="fill:var(--muted);font-size:11px">${esc(it.label)}</text>`;
+    if(opts.values!==false) labels+=`<text x="${x+bw*0.32}" y="${y-6}" text-anchor="middle" style="fill:var(--ink-soft);font-size:11px;font-weight:700">${it.value}</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto" class="anim-bars">${bars}${labels}</svg>`;
+}
+function lineArea(series,labels,opts={}){
+  const W=opts.w||520,H=opts.h||230,pad=34;
+  const all=series.flatMap(s=>s.data); const max=Math.max(...all,1);
+  const xx=i=>pad+i*((W-pad*2)/(labels.length-1));
+  const yy=v=>H-pad-(v/max)*(H-pad-20);
+  let grid='';for(let g=0;g<=4;g++){const y=pad+g*((H-pad-20)/4);grid+=`<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" style="stroke:var(--border);stroke-width:1"/>`;}
+  let xl='';labels.forEach((l,i)=>{xl+=`<text x="${xx(i)}" y="${H-12}" text-anchor="middle" style="fill:var(--muted);font-size:10.5px">${esc(l)}</text>`;});
+  let paths='';
+  series.forEach(s=>{
+    const pts=s.data.map((v,i)=>`${xx(i)},${yy(v)}`).join(' ');
+    const area=`${pad},${H-pad} ${pts} ${W-pad},${H-pad}`;
+    paths+=`<polygon points="${area}" style="fill:${s.fill||'var(--royal-soft)'};opacity:.5"/>`;
+    paths+=`<polyline points="${pts}" style="fill:none;stroke:${s.color};stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round"/>`;
+    paths+=s.data.map((v,i)=>`<circle cx="${xx(i)}" cy="${yy(v)}" r="3.2" style="fill:var(--surface);stroke:${s.color};stroke-width:2.2"/>`).join('');
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">${grid}${paths}${xl}</svg>`;
+}
+function sparkline(values,color){
+  const W=96,H=42,max=Math.max(...values,1),min=Math.min(...values);
+  const xx=i=>i*(W/(values.length-1)),yy=v=>H-2-((v-min)/(max-min||1))*(H-6);
+  const pts=values.map((v,i)=>`${xx(i)},${yy(v)}`).join(' ');
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><polyline points="${pts}" style="fill:none;stroke:${color};stroke-width:2.4;opacity:.55;stroke-linecap:round"/></svg>`;
+}
+/* animate any chart that just got injected */
+function animateCharts(scope=document){
+  requestAnimationFrame(()=>setTimeout(()=>{
+    $$('[data-dash]',scope).forEach(c=>c.style.strokeDashoffset=c.getAttribute('data-dash'));
+    $$('.bar-fill[data-w]',scope).forEach(b=>b.style.width=b.getAttribute('data-w'));
+    $$('.anim-bars rect[data-h]',scope).forEach(r=>{r.setAttribute('y',r.getAttribute('data-y'));r.setAttribute('height',r.getAttribute('data-h'));});
+  },60));
+}
+
+/* ============================================================
+   EMBEDDED DATA
+   ============================================================ */
+const CATEGORIES=['Electronics','Cars','Land','Apartments','Jobs','Loans','Phones','Computers','Furniture','Agriculture','Fashion','Investment','Services'];
+const LOCATIONS=['Kigali','Nyamirambo','Kimironko','Remera','Gisozi','Kacyiru','Kicukiro','Nyarutarama','Musanze','Huye','Rubavu','Muhanga','Nyagatare','Rwamagana','Nairobi','Kampala','Dar es Salaam','Bujumbura'];
+const GENUINE_SELLERS=['Kigali Tech Hub','Inyange Motors','Akagera Properties','Umurava Supplies','Kivu Electronics','Green Hills Furniture','Musanze Agri Co-op','Urban Threads','Rw Computer Centre','Reliable Plumbing Ltd','Nile Auto Yard','Heaven Realtors','Bralirwa Resellers','EastAfri Devices'];
+const FRAUD_SELLERS=['QuickCash Deals','Mega Profit Group','InstantLoan RW','LuxuryForLess','CryptoKing254','FastMoney Hub','DubaiImports Cheap','Visa Express Agency','Forex Genius','GiveawayKing','Plot Bargains','SoldierSale','MiracleTech','TripleAirtime'];
+
+const GENUINE_TEXTS=[
+ ['Phones','Selling a gently used Samsung Galaxy A54, 128GB, with the original charger and receipt. Meet at our shop for inspection.'],
+ ['Phones','iPhone 13, 256GB, battery health 89%. Buyer can verify the IMEI before purchase. Cash or MoMo accepted on collection.'],
+ ['Phones','Tecno Camon, dual SIM, used three months, receipt and box available. Inspect before you pay.'],
+ ['Cars','Toyota RAV4 2016, full service history, second owner, registration documents available for verification at our yard.'],
+ ['Cars','Honda Fit 2014, low mileage, clean interior, insurance valid. Test drive available at our lot.'],
+ ['Apartments','Three-bedroom apartment for rent, secure compound, water and backup power. Site visit by appointment.'],
+ ['Apartments','Two-bedroom house for sale, fenced, title deed ready. Agent fee disclosed upfront before any payment.'],
+ ['Land','Plot of land 600 sqm with valid title deed. Lawyer-assisted transfer. Viewing arranged with the agent.'],
+ ['Jobs','We are hiring a part-time accountant for our office. Send your CV to apply; interviews are held on site.'],
+ ['Jobs','Internship opening for marketing students, stipend provided, apply with a portfolio. No fees to apply.'],
+ ['Computers','HP EliteBook laptop, i5, 8GB RAM, 256GB SSD, refurbished with a 3-month shop warranty.'],
+ ['Computers','Refurbished MacBook Air 2017, charger included, 30-day return policy at our store.'],
+ ['Computers','Dell 24-inch monitor, no dead pixels, comes with cables, tested working.'],
+ ['Furniture','Solid mahogany dining table with six chairs, locally made. Delivery within town at extra cost.'],
+ ['Furniture','Leather sofa set, three pieces, minor wear, delivery negotiable. Pickup also available.'],
+ ['Furniture','Office desk and ergonomic chair set, good condition, pickup from our showroom.'],
+ ['Agriculture','Fresh Irish potatoes, sold per sack, wholesale and retail. Collection at the market.'],
+ ['Agriculture','Mature dairy cow, vaccinated, veterinary records available for the buyer to review.'],
+ ['Agriculture','Wholesale maize flour, certified packaging, bulk discounts for registered shops.'],
+ ['Fashion','New arrival cotton dresses, sizes S to XL, fixed price, exchange allowed within 3 days with receipt.'],
+ ['Services','Registered plumbing service, fixed call-out fee, invoices provided for every job.'],
+ ['Services','Catering services for events, transparent pricing per plate, tasting available beforehand.'],
+ ['Electronics','Sony Bravia 43-inch Smart TV, used six months, boxed with remote. Inspect before paying.'],
+ ['Electronics','Genuine Anker power bank, sealed, with a warranty card. Shop located in town.'],
+ ['Loans','Standard fixed-term savings plan through our licensed cooperative; terms explained at the branch.'],
+ ['Investment','Registered unit trust offered through a licensed advisor; prospectus shared before you commit.']
+];
+const FRAUD_TEXTS=[
+ ['Phones','URGENT!! Brand new iPhone 15 only 80,000 RWF!! Pay deposit NOW via MoMo before stock finishes!! WhatsApp only!!'],
+ ['Phones','iPhone giveaway!! Like, share and send a 5,000 RWF verification fee to receive your FREE phone today!!'],
+ ['Investment','Double your money in 7 days!! 100% guaranteed returns!! Join our investment group TODAY and become rich!!'],
+ ['Investment','Invest in crypto mining and earn daily profit guaranteed!! Withdraw anytime!! Deposit USDT now to start.'],
+ ['Investment','FREE MONEY giveaway!! First 100 people to send airtime get triple back instantly!! Hurry hurry!!'],
+ ['Investment','Forex robot earns 300% monthly automatically!! No risk!! Deposit minimum 100 USD to activate your account.'],
+ ['Investment','Make money fast!! Recruit 5 friends and earn forever!! Pay membership to unlock your earnings dashboard.'],
+ ['Land','Cheap land only 200,000 RWF!! No title needed, pay the full amount now and the agent brings papers later.'],
+ ['Land','Plot with lake view, only 50,000 RWF deposit!! No agent, deal directly, pay fast before others grab it!!'],
+ ['Loans','Get an INSTANT loan approved in 5 minutes!! No documents, no checks!! Just send a 10,000 RWF processing fee first.'],
+ ['Loans','Government grant available NOW!! Claim 1,000,000 RWF!! Just pay a small clearance fee and send your bank PIN.'],
+ ['Loans','Loan with zero interest forever!! Approved instantly!! Just confirm your card details to receive the funds.'],
+ ['Cars','CONGRATULATIONS!! You WON a free car!! Click this link and pay the shipping fee to claim your prize now!!'],
+ ['Cars','Hot deal!! Toyota Prado fully loaded only 1,500,000 RWF!! Soldier selling urgently, pay a deposit to hold it.'],
+ ['Jobs','Work from home and earn 500,000 RWF weekly!! No experience!! Pay a registration fee to start immediately!!'],
+ ['Jobs','Guaranteed visa and job abroad!! Pay the agency fee now, 100% success, no interview required, limited slots!!'],
+ ['Computers','Brand new laptops 90% OFF!! Limited stock!! Send advance payment now, delivery same day, no refunds.'],
+ ['Apartments','Luxury apartment super cheap!! Pay the deposit before viewing to reserve, money back if not satisfied (trust me).'],
+ ['Apartments','Apartment too cheap to be true!! Owner overseas, send rent via Western Union, keys posted to you after.'],
+ ['Fashion','Original Rolex 95% discount!! Only today!! Pay now via crypto, no inspection allowed, sealed item.'],
+ ['Fashion','Designer shoes 80% off!! Only via WhatsApp!! Send a deposit, shipped from Dubai, absolutely no refunds!!'],
+ ['Electronics','Brand new 65-inch TV 70,000 RWF clearance!! Container sale!! Pay now, no inspection, first come first served!!'],
+ ['Electronics','Solar miracle device cuts your bill to zero!! Pay now, factory price, limited units, act fast!!'],
+ ['Furniture','Sofa set almost free!! Moving abroad, must sell today!! Send full payment, the courier will deliver, trust me.'],
+ ['Agriculture','Cheap fertilizer in bulk!! Pay upfront, supplier abroad, delivery in 2 weeks, WhatsApp only, no calls.'],
+ ['Services','Earn passive income!! Our app pays you to watch ads!! Pay an activation fee and start cashing out today!!']
+];
+
+/* Build the 150-record dataset (75 genuine, 75 fraudulent) */
+function buildDataset(){
+  const data=[]; let id=1000;
+  const make=(label,texts,sellers)=>{
+    for(let i=0;i<75;i++){
+      const t=texts[i%texts.length];
+      const loc=pick(LOCATIONS);
+      const month=randInt(0,7), day=randInt(1,27);
+      const date=`2026-${pad(6-Math.floor(month/2)||1)}-${pad(day)}`;
+      const baseConf=label==='Fraudulent'?randInt(78,98):randInt(80,97);
+      const risk=label==='Fraudulent'?(baseConf>90?'High':'Medium'):(baseConf>92?'Low':'Low');
+      data.push({
+        id:++id,
+        text:i>=texts.length?`${t[1]} (Listing in ${loc})`:t[1],
+        category:t[0],
+        seller:pick(sellers),
+        location:loc,
+        price:randInt(1,40)*( t[0]==='Land'||t[0]==='Cars'||t[0]==='Apartments'?500000:25000),
+        date,
+        status:label,
+        prediction:label,
+        confidence:baseConf,
+        risk: label==='Fraudulent'?(baseConf>=90?'High':'Medium'):'Low',
+        reviewer: label==='Fraudulent'?pick(['—','M. Uwase','J. Niyonzima']):pick(['Auto','S. Keza','—'])
+      });
+    }
+  };
+  make('Genuine',GENUINE_TEXTS,GENUINE_SELLERS);
+  make('Fraudulent',FRAUD_TEXTS,FRAUD_SELLERS);
+  return data;
+}
+const DATASET = buildDataset();
+</script>
+<script>
+/* ============================================================
+   Block 2: detection engine, state, auth, theme, router
+   ============================================================ */
+
+/* ---- Fraud indicator lexicon (regex signals) ---- */
+const INDICATORS=[
+ {label:'Pressure & urgency', w:26, type:'danger', re:/urgent|hurry|act fast|today only|before .* (finish|grab)|limited (stock|units|slots)|first come|act now/i},
+ {label:'Guaranteed / impossible returns', w:30, type:'danger', re:/guarantee[d]?|100% ?(returns|success|profit)?|double your money|triple|daily profit|risk[- ]?free|no risk/i},
+ {label:'Upfront / advance payment', w:30, type:'danger', re:/deposit|pay (now|upfront|fast|full)|advance payment|send (full )?payment|processing fee|activation fee|registration fee|clearance fee|membership fee|small fee/i},
+ {label:'Refuses inspection / verification', w:18, type:'warn', re:/no inspection|no refund|no checks|no documents?|no interview|without inspection|sealed item|no calls/i},
+ {label:'Off-platform / untraceable payment', w:18, type:'warn', re:/whatsapp only|via whatsapp|western union|usdt|crypto|bitcoin|momo (only|now)|send airtime/i},
+ {label:'Too-good pricing', w:16, type:'warn', re:/(80|90|95)% ?(off|discount)|super cheap|too cheap|almost free|clearance|miracle|factory price/i},
+ {label:'Prize / giveaway bait', w:28, type:'danger', re:/free (phone|money|car|product|sample)?|giveaway|you ?won|congratulations|claim your prize/i},
+ {label:'Requests sensitive credentials', w:34, type:'danger', re:/bank pin|card details|your pin|cvv|\bpassword\b|\botp\b|bank details/i},
+ {label:'Recruitment / pyramid pattern', w:16, type:'warn', re:/recruit|refer .* friends|earn forever|downline|earnings dashboard|join our (investment )?group/i},
+ {label:'Overseas / shipping ruse', w:16, type:'warn', re:/overseas|owner abroad|supplier abroad|shipped from|shipping fee|posted to you|moving abroad/i},
+ {label:'Link / click bait', w:26, type:'danger', re:/click (this|the)? ?link|click here|tap the link|this link/i},
+ {label:'Excessive punctuation', w:12, type:'warn', re:/!{2,}/},
+ {label:'Loan / visa / grant lure', w:28, type:'danger', re:/instant loan|approved in \d|visa and job|job abroad|government grant|loan .* (5 minutes|instantly)/i},
+ {label:'Speculative investment lure', w:18, type:'warn', re:/forex|crypto mining|invest now|investment group|robot earns|withdraw anytime|passive income/i}
+];
+
+function highlightText(text, matched){
+  const ranges=[];
+  matched.forEach(m=>{
+    const re=new RegExp(m.re.source,'gi'); let mm;
+    while((mm=re.exec(text))!==null){
+      if(mm[0].length===0){re.lastIndex++;continue;}
+      ranges.push({s:mm.index,e:mm.index+mm[0].length,type:m.type});
+    }
+  });
+  if(!ranges.length) return esc(text);
+  ranges.sort((a,b)=>a.s-b.s||b.e-a.e);
+  const merged=[];
+  ranges.forEach(r=>{const l=merged[merged.length-1];
+    if(l&&r.s<=l.e){l.e=Math.max(l.e,r.e); if(r.type==='danger')l.type='danger';}
+    else merged.push({...r});});
+  let out='',cur=0;
+  merged.forEach(r=>{out+=esc(text.slice(cur,r.s));
+    out+=`<span class="kw ${r.type==='danger'?'':'warn'}">${esc(text.slice(r.s,r.e))}</span>`; cur=r.e;});
+  out+=esc(text.slice(cur)); return out;
+}
+
+function actionFor(label,risk){
+  if(label==='Fraudulent'&&risk==='High') return {text:'Recommend removal & seller review',tone:'fraud'};
+  if(label==='Fraudulent') return {text:'Flag for manual moderation',tone:'review'};
+  if(risk==='Medium') return {text:'Approve with monitoring',tone:'review'};
+  return {text:'Approve — no action required',tone:'genuine'};
+}
+
+function analyze(text, meta={}){
+  const t=text||''; const low=t.toLowerCase();
+  const matched=[]; let dangerW=0, warnW=0;
+  INDICATORS.forEach(ind=>{
+    const hit=ind.re.test(low); ind._hit=hit;
+    if(hit){matched.push({re:ind.re,type:ind.type}); if(ind.type==='danger')dangerW+=ind.w; else warnW+=ind.w;}
+  });
+  const textScore=clamp(dangerW + warnW*0.55, 0, 100);
+  const m=Object.assign({age:'established',verified:'verified',engagement:'normal'},meta);
+  let credit=50;
+  credit += m.verified==='verified'? 24 : -22;
+  credit += m.age==='established'? 16 : m.age==='new'? -20 : 0;
+  credit=clamp(credit,3,98);
+  const engagement = m.engagement==='high'?80 : m.engagement==='low'?28 : 54;
+  const metaFraud = (100-credit)*0.34 + (m.engagement==='high'?13:0) - (m.engagement==='low'?5:0);
+  let fraudScore=clamp(Math.round(textScore*0.7 + metaFraud*0.9),0,99);
+  if(matched.length===0) fraudScore=clamp(fraudScore,0,26);
+  const threshold=STATE.settings.threshold;
+  const label=fraudScore>=threshold?'Fraudulent':'Genuine';
+  const risk=fraudScore>=70?'High':fraudScore>=40?'Medium':'Low';
+  const confidence=clamp(Math.round(55 + Math.abs(fraudScore-threshold)*0.92 + matched.length*2),55,99);
+  const features=[
+    {label:'Text semantics', value:Math.round(textScore), color:textScore>=60?'var(--red)':textScore>=35?'var(--amber)':'var(--green)'},
+    {label:'Source credibility', value:Math.round(credit), color:credit>=60?'var(--green)':credit>=35?'var(--amber)':'var(--red)'},
+    {label:'Engagement velocity', value:Math.round(engagement), color:m.engagement==='high'?'var(--amber)':'var(--royal)'}
+  ];
+  const signalList=INDICATORS.filter(i=>i._hit).map(i=>({label:i.label,type:i.type}));
+  const reason=label==='Fraudulent'
+    ? `Detected ${signalList.length} fraud indicator${signalList.length!==1?'s':''} typical of deceptive marketplace listings, combined with the supplied source signals.`
+    : (signalList.length? 'A few cautionary phrases were found, but the overall language and source profile match a legitimate listing.'
+        : 'No fraud indicators detected; language and source signals are consistent with a genuine listing.');
+  return {label,confidence,fraudScore,risk,features,highlights:highlightText(t,matched),hits:signalList.length,reason,action:actionFor(label,risk),signalList,threshold,meta:m};
+}
+
+const DEMO_CASES=[
+ {tone:'genuine', label:'Likely genuine', text:'Selling a gently used Samsung Galaxy A54, 128GB, with the original charger and receipt. Meet at our shop for inspection before you pay.'},
+ {tone:'fraud', label:'Likely fraud', text:'URGENT!! Double your money in 7 days, 100% guaranteed!! Click this link and pay a small deposit via MoMo now before slots finish!!'},
+ {tone:'review', label:'Borderline', text:'Cheap land plot only 200,000 RWF, owner abroad, send deposit to reserve and the agent brings the papers later.'},
+ {tone:'genuine', label:'Verified store', text:'Refurbished HP EliteBook, i5, 8GB RAM, 256GB SSD, sold with a 3-month shop warranty and a 30-day return policy.'}
+];
+
+/* ============================================================
+   STATE + accounts
+   ============================================================ */
+const DEMO_ACCOUNTS=[
+ {user:'admin',      pass:'admin123',    name:'Aline Dushime',  role:'Administrator', initials:'AD', color:'var(--royal)'},
+ {user:'researcher', pass:'research123', name:'Eric Habimana',  role:'Researcher',    initials:'EH', color:'var(--cyan)'},
+ {user:'analyst',    pass:'analyst123',  name:'Sandra Keza',    role:'Data Analyst',  initials:'SK', color:'var(--green)'},
+ {user:'moderator',  pass:'mod123',      name:'Jean Niyonzima', role:'Moderator',     initials:'JN', color:'var(--amber)'}
+];
+
+const STATE={
+  user:null, theme:'light',
+  settings:{threshold:60, sensitivity:'Balanced', model:'BERT (fine-tuned)', notif:true, autosave:true, lang:'English'},
+  posts:[], notifications:[], audit:[], reviewQueue:[], lastAnalysis:null
+};
+
+/* clone dataset into mutable posts; mark a review queue */
+STATE.posts = DATASET.map(r=>({...r}));
+[3,9,17,28,41,55,70,88,101,120].forEach(i=>{ if(STATE.posts[i]){ STATE.posts[i].status='Pending'; STATE.posts[i].reviewer='—'; }});
+STATE.reviewQueue = STATE.posts.filter(p=>p.status==='Pending');
+
+STATE.notifications=[
+ {id:1,icon:'i-alert',  tone:'fraud',  title:'High-risk listing flagged', body:'“Double your money in 7 days” matched 5 fraud signals.', time:'2m ago', read:false},
+ {id:2,icon:'i-inbox',  tone:'review', title:'10 listings awaiting review', body:'The moderation queue has new pending items.', time:'18m ago', read:false},
+ {id:3,icon:'i-cpu',    tone:'genuine',title:'Model retrain complete', body:'BERT classifier refreshed — F1 improved to 0.948.', time:'1h ago', read:false},
+ {id:4,icon:'i-ban',    tone:'fraud',  title:'Seller added to blacklist', body:'“QuickCash Deals” blacklisted after 6 confirmed scams.', time:'3h ago', read:true},
+ {id:5,icon:'i-verified',tone:'genuine',title:'Seller verified', body:'“Kigali Tech Hub” passed trust verification.', time:'Yesterday', read:true}
+];
+STATE.audit=[
+ {who:'Aline Dushime', act:'Updated detection threshold to 60%', time:'09:42'},
+ {who:'Sandra Keza',   act:'Approved 12 listings in review queue', time:'09:15'},
+ {who:'Jean Niyonzima',act:'Flagged listing #1043 as fraudulent', time:'08:58'},
+ {who:'Eric Habimana', act:'Exported dataset snapshot (150 records)', time:'08:30'},
+ {who:'System',        act:'Nightly model retrain finished', time:'02:00'}
+];
+
+/* ============================================================
+   Theme / toast / modal helpers
+   ============================================================ */
+function applyTheme(t){
+  STATE.theme=t;
+  document.documentElement.setAttribute('data-theme', t==='dark'?'dark':'light');
+  const ic = t==='dark'?'#i-sun':'#i-moon';
+  ['themeBtn','loginThemeBtn'].forEach(id=>{const b=$('#'+id); if(!b)return; const u=b.querySelector('use'); if(u)u.setAttribute('href',ic); else b.innerHTML=`<svg class="ic"><use href="${ic}"/></svg>`;});
+  const sd=$('#setDark'); if(sd) sd.checked = (t==='dark');
+}
+function toggleTheme(){ applyTheme(STATE.theme==='dark'?'light':'dark'); }
+
+let toastSeq=0;
+function toast(msg, tone='genuine', ms=3200){
+  const wrap=$('#toasts'); if(!wrap) return;
+  const cls = tone==='fraud'?'err': tone==='review'?'warn': tone==='warn'?'warn': tone==='err'?'err': 'ok';
+  const icon = cls==='err'?'i-alert': cls==='warn'?'i-info':'i-check';
+  const el=document.createElement('div');
+  el.className='toast '+cls; el.id='t'+(++toastSeq);
+  el.innerHTML=`<svg class="ic" style="color:var(--${cls==='err'?'red':cls==='warn'?'amber':'green'});flex:none"><use href="#${icon}"/></svg>
+    <div style="flex:1"><div class="tt">${esc(msg)}</div></div>
+    <button class="btn btn-icon btn-ghost btn-sm" aria-label="Dismiss" style="margin:-4px -4px -4px 0"><svg class="ic ic-sm"><use href="#i-x"/></svg></button>`;
+  wrap.appendChild(el);
+  const close=()=>{el.style.transition='opacity .25s,transform .25s'; el.style.opacity='0'; el.style.transform='translateX(30px)'; setTimeout(()=>el.remove(),260);};
+  el.querySelector('button').onclick=close;
+  setTimeout(close, ms);
+}
+
+function openModal(title, bodyHTML, footHTML, wide){
+  const ov=$('#overlay'), md=$('#modal');
+  md.className='modal'+(wide?' wide':'');
+  md.innerHTML=`<div class="modal-head"><h3>${esc(title)}</h3><button class="btn btn-icon btn-ghost" id="modalX" aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="modal-body">${bodyHTML}</div>
+    ${footHTML?`<div class="modal-foot">${footHTML}</div>`:''}`;
+  ov.classList.add('on');
+  $('#modalX').onclick=closeModal;
+  return md;
+}
+function closeModal(){ $('#overlay').classList.remove('on'); }
+
+/* ============================================================
+   Auth + login
+   ============================================================ */
+function renderDemoAccounts(){
+  const g=$('#demoGrid'); if(!g) return;
+  g.innerHTML=DEMO_ACCOUNTS.map(a=>`
+    <button class="demo-acct" data-user="${a.user}">
+      <div class="r">${esc(a.name)}</div>
+      <div class="u">${esc(a.role)} · ${a.user}</div>
+    </button>`).join('');
+  $$('.demo-acct',g).forEach(b=>b.onclick=()=>{
+    const a=DEMO_ACCOUNTS.find(x=>x.user===b.dataset.user);
+    $('#loginUser').value=a.user; $('#loginPass').value=a.pass;
+    doLogin();
+  });
+}
+function doLogin(){
+  const u=$('#loginUser').value.trim().toLowerCase(), p=$('#loginPass').value;
+  const acct=DEMO_ACCOUNTS.find(a=>a.user===u);
+  if(!acct || acct.pass!==p){ toast('Invalid credentials — try a demo account below.','fraud'); $('#loginPass').focus(); return; }
+  STATE.user=acct;
+  hydrateUser();
+  $('#login').style.display='none';
+  $('#app').classList.add('on');
+  navTo('dashboard');
+  toast(`Welcome back, ${acct.name.split(' ')[0]}.`,'genuine');
+  maybeTour();
+}
+function hydrateUser(){
+  const a=STATE.user; if(!a) return;
+  $('#userName').textContent=a.name;
+  $('#userRole').textContent=a.role;
+  const av=$('#userAvatar'); av.textContent=a.initials; av.style.background=a.color;
+  const pn=$('#profName'); if(pn) pn.value=a.name;
+  const pe=$('#profEmail'); if(pe) pe.value=a.user+'@fraudguard.rw';
+  const pr=$('#profRole'); if(pr) pr.value=a.role;
+}
+function logout(){
+  STATE.user=null;
+  $('#app').classList.remove('on');
+  $('#login').style.display='flex';
+  $('#loginPass').value='';
+  closeModal();
+}
+
+/* ============================================================
+   Router
+   ============================================================ */
+const VIEW_TITLES={
+  dashboard:'Dashboard', detect:'Live Detection', analytics:'Analytics',
+  posts:'Listings & Moderation', dataset:'Training Dataset', sellers:'Seller Registry',
+  models:'Model Performance', pipeline:'NLP Pipeline', reports:'Reports',
+  users:'Operators & Roles', settings:'Settings', help:'Help & Research'
+};
+let CURRENT_VIEW='dashboard';
+function navTo(view){
+  if(!VIEW_TITLES[view]) view='dashboard';
+  CURRENT_VIEW=view;
+  $$('.sb-link').forEach(l=>l.classList.toggle('active', l.dataset.view===view));
+  $$('.view').forEach(v=>v.classList.toggle('active', v.id==='view-'+view));
+  const cr=$('#crumbCur'); if(cr) cr.textContent=VIEW_TITLES[view];
+  renderView(view);
+  closeSidebar();
+  const c=$('.content'); if(c) c.scrollTop=0;
+}
+function closeSidebar(){ const s=$('#sidebar'); if(s)s.classList.remove('open'); const b=$('#sbBackdrop'); if(b)b.classList.remove('on'); }
+function openSidebar(){ const s=$('#sidebar'); if(s)s.classList.add('open'); const b=$('#sbBackdrop'); if(b)b.classList.add('on'); }
+</script>
+<script>
+/* ============================================================
+   Block 3: shared helpers + dashboard / detect / posts / dataset
+   ============================================================ */
+
+/* ---------- shared UI helpers ---------- */
+function chip(label, tone){
+  const map={Genuine:'chip-green',Fraudulent:'chip-red',Pending:'chip-amber',
+    Low:'chip-green',Medium:'chip-amber',High:'chip-red',Active:'chip-green',Verified:'chip-green',Blacklisted:'chip-red'};
+  const cls=tone||map[label]||'chip-gray';
+  return `<span class="chip ${cls}"><span class="dot"></span>${esc(label)}</span>`;
+}
+function statCard(icon, base, soft, val, label, delta, up, spark, sparkColor){
+  return `<div class="card stat">
+    <div class="top"><div class="ico" style="background:${soft}"><svg class="ic" style="color:${base}"><use href="#${icon}"/></svg></div>
+    ${delta!=null?`<span class="delta ${up?'up':'down'}"><svg class="ic ic-sm"><use href="#${up?'i-trend-up':'i-trend-dn'}"/></svg>${esc(delta)}</span>`:''}</div>
+    <div class="val tnum">${val}</div><div class="lbl">${esc(label)}</div>
+    ${spark?`<div class="spark">${sparkline(spark, sparkColor||base)}</div>`:''}</div>`;
+}
+function panel(title, body, sub, headRight){
+  return `<div class="card"><div class="panel-head"><div><h3>${esc(title)}</h3>${sub?`<span class="sub">${esc(sub)}</span>`:''}</div>${headRight||''}</div><div class="panel-body">${body}</div></div>`;
+}
+function pagerHTML(total, page, per){
+  const pages=Math.max(1,Math.ceil(total/per));
+  let btns='';
+  for(let p=1;p<=pages;p++){
+    if(pages>7 && p>1 && p<pages && Math.abs(p-page)>1){ if(p===2||p===pages-1) btns+='<span class="pg" style="border:none;background:none;cursor:default">…</span>'; continue; }
+    btns+=`<button class="pg ${p===page?'on':''}" data-pg="${p}">${p}</button>`;
+  }
+  const a=total?(page-1)*per+1:0, b=Math.min(total,page*per);
+  return `<div class="info">Showing ${a}–${b} of ${total}</div><div class="pages">${btns}</div>`;
+}
+function download(filename, text, type){
+  const blob=new Blob([text],{type:type||'text/plain;charset=utf-8'}); const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+  toast('Downloaded '+filename,'genuine');
+}
+function toCSV(rows, cols){
+  const head=cols.map(c=>`"${c.label}"`).join(',');
+  const body=rows.map(r=>cols.map(c=>{let v=c.get?c.get(r):r[c.key]; v=String(v==null?'':v).replace(/"/g,'""'); return `"${v}"`;}).join(',')).join('\n');
+  return head+'\n'+body;
+}
+const truncate=(s,n)=>s.length>n?s.slice(0,n-1)+'…':s;
+
+/* ---------- view dispatcher ---------- */
+function renderView(view){
+  ({dashboard:renderDashboard, detect:renderDetect, analytics:renderAnalytics, posts:renderPosts,
+    dataset:renderDataset, sellers:renderSellers, models:renderModels, pipeline:renderPipeline,
+    reports:renderReports, users:renderUsers, settings:renderSettings, help:renderHelp}[view]||function(){})();
+}
+function renderAll(){ updateReviewBadge(); renderNotifs(); renderView(CURRENT_VIEW); }
+function updateReviewBadge(){
+  const n=STATE.reviewQueue.length, b=$('#navReviewBadge');
+  if(b){ b.textContent=n; b.style.display=n?'':'none'; }
+  const dot=$('#notifDot'); if(dot) dot.style.display=STATE.notifications.some(x=>!x.read)?'':'none';
+}
+function postStats(){
+  const p=STATE.posts;
+  const fraud=p.filter(x=>x.prediction==='Fraudulent').length;
+  const genuine=p.filter(x=>x.prediction==='Genuine').length;
+  const avgConf=Math.round(p.reduce((a,b)=>a+b.confidence,0)/p.length);
+  return {total:p.length, fraud, genuine, pending:STATE.reviewQueue.length, avgConf};
+}
+
+/* ============================================================
+   DASHBOARD
+   ============================================================ */
+function renderDashboard(){
+  const v=$('#view-dashboard'); if(!v) return;
+  const s=postStats();
+  const fraudPct=Math.round(s.fraud/s.total*100);
+  $('#dashStats').innerHTML=
+    statCard('i-list','var(--royal)','var(--royal-soft)',nf(s.total),'Listings analyzed','+12.4%',true,[60,72,68,90,84,110,138])+
+    statCard('i-ban','var(--red)','var(--red-soft)',nf(s.fraud),'Fraud detected','+8.1%',true,[20,28,24,40,38,52,s.fraud])+
+    statCard('i-verified','var(--green)','var(--green-soft)',nf(s.genuine),'Genuine listings','+4.6%',true,[40,46,44,58,60,70,s.genuine])+
+    statCard('i-inbox','var(--amber)','var(--amber-soft)',nf(s.pending),'Pending review','−3.0%',false,[16,14,15,12,13,11,s.pending])+
+    statCard('i-target','var(--cyan)','var(--cyan-soft)','94.8%','Model accuracy','+1.2%',true,[90,91,92,92,93,94,95])+
+    statCard('i-activity','var(--royal)','var(--royal-soft)',s.avgConf+'%','Avg. confidence','+2.1%',true,[80,82,85,84,88,90,s.avgConf])+
+    statCard('i-shield','var(--green)','var(--green-soft)','0.948','Detection F1','+0.03',true,[88,89,90,91,92,93,95])+
+    statCard('i-clock','var(--cyan)','var(--cyan-soft)','142 ms','Avg. latency','−11 ms',true,[180,170,165,160,150,146,142]);
+
+  const months=['Jan','Feb','Mar','Apr','May','Jun'];
+  $('#trendChart').innerHTML=lineArea([
+    {data:[18,24,21,33,29,42],color:'var(--red)',fill:'var(--red-soft)'},
+    {data:[40,44,47,52,58,63],color:'var(--green)',fill:'var(--green-soft)'}
+  ], months);
+  $('#splitChart').innerHTML=donutRing(fraudPct,'var(--red)','flagged fraud')+
+    `<div style="display:flex;justify-content:center;gap:18px;margin-top:6px;font-size:12px">
+      <span class="chip chip-red"><span class="dot"></span>Fraud ${s.fraud}</span>
+      <span class="chip chip-green"><span class="dot"></span>Genuine ${s.genuine}</span></div>`;
+
+  const catCounts={};
+  STATE.posts.forEach(p=>{ if(p.prediction==='Fraudulent') catCounts[p.category]=(catCounts[p.category]||0)+1; });
+  const topCats=Object.entries(catCounts).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  $('#catChart').innerHTML=vbars(topCats.map(([k,v])=>({label:truncate(k,7),value:v,color:'var(--royal)'})),{h:200});
+
+  const feed=[
+    {dot:'var(--red)', t:'High-risk listing flagged', m:'“Double your money in 7 days” → 5 fraud signals', g:'2 minutes ago'},
+    {dot:'var(--amber)', t:'10 listings queued for review', m:'Moderation backlog updated', g:'18 minutes ago'},
+    {dot:'var(--green)', t:'Seller verified', m:'Kigali Tech Hub passed trust checks', g:'40 minutes ago'},
+    {dot:'var(--royal)', t:'Model retrain complete', m:'BERT F1 improved to 0.948', g:'1 hour ago'},
+    {dot:'var(--red)', t:'Seller blacklisted', m:'QuickCash Deals — 6 confirmed scams', g:'3 hours ago'}
+  ];
+  $('#activityFeed').innerHTML=`<div class="timeline">`+feed.map(f=>`<div class="tl-item"><span class="tl-dot" style="background:${f.dot}"></span><div class="tl-t">${esc(f.t)}</div><div class="tl-m">${esc(f.m)}</div><div class="tl-g">${esc(f.g)}</div></div>`).join('')+`</div>`;
+  animateCharts(v);
+}
+
+/* ============================================================
+   DETECTION
+   ============================================================ */
+let detectMeta={age:'established', verified:'verified', engagement:'high'};
+const SEG_MAP={age:{old:'established',new:'new'}, verified:{yes:'verified',no:'unverified'}, engagement:{high:'high',low:'low'}};
+
+function renderQuickCases(){
+  const q=$('#quickCases'); if(!q) return;
+  q.innerHTML=DEMO_CASES.map((c,i)=>`<button class="chip ${c.tone==='fraud'?'chip-red':c.tone==='genuine'?'chip-green':'chip-amber'}" data-case="${i}" style="cursor:pointer"><span class="dot"></span>${esc(c.label)}</button>`).join('');
+  $$('[data-case]',q).forEach(b=>b.onclick=()=>{ $('#detectInput').value=DEMO_CASES[+b.dataset.case].text; $('#detectInput').focus(); });
+}
+function runDetect(){
+  const text=$('#detectInput').value.trim();
+  if(!text){ toast('Paste a marketplace post first.','warn'); return; }
+  $('#detectIdle').style.display='none';
+  $('#detectResult').classList.remove('show');
+  $('#detectLoading').style.display='block';
+  $('#detectStatus').textContent='Scanning…';
+  const steps=['Text cleaning & normalization','Tokenization','Stop-word removal','Feature extraction (TF-IDF + embeddings)','BERT classification','Risk scoring & explanation'];
+  const host=$('#scanSteps');
+  host.innerHTML=steps.map((s,i)=>`<div class="scan-step"><span class="mk">${i+1}</span><span>${esc(s)}</span></div>`).join('');
+  const els=$$('.scan-step',host); let i=0;
+  const tick=()=>{
+    if(i>0){ const prev=els[i-1]; prev.classList.remove('run'); prev.classList.add('done'); prev.querySelector('.mk').innerHTML='<svg class="ic ic-sm"><use href="#i-check"/></svg>'; }
+    if(i<els.length){ els[i].classList.add('run'); i++; setTimeout(tick, 340+rng()*240); }
+    else finishDetect(text);
+  };
+  setTimeout(tick, 280);
+}
+function finishDetect(text){
+  const res=analyze(text, detectMeta);
+  STATE.lastAnalysis={text, res};
+  $('#detectLoading').style.display='none';
+  $('#detectStatus').textContent=res.label+' · '+res.confidence+'% conf';
+  paintResult(text, res);
+  toast('Analysis complete — '+res.label.toLowerCase()+' ('+res.confidence+'%).', res.label==='Fraudulent'?'fraud':'genuine');
+}
+function paintResult(text, res){
+  const banner=$('#verdictBanner');
+  banner.className='verdict '+(res.label==='Fraudulent'?(res.risk==='High'?'fraud':'review'):'genuine');
+  banner.querySelector('.vbadge use').setAttribute('href', res.label==='Fraudulent'?'#i-ban':'#i-verified');
+  $('#verdictLabel').textContent=res.label==='Fraudulent'?'Fraudulent listing':'Genuine listing';
+  $('#verdictSub').textContent=res.reason;
+  $('#verdictScore').textContent=res.confidence+'%';
+  $('#confGauge').innerHTML=donutRing(res.confidence, res.label==='Fraudulent'?'var(--red)':'var(--green)','Confidence');
+  $('#riskGauge').innerHTML=semiGauge(res.fraudScore);
+  $('#featureBreak').innerHTML=hbars(res.features,{max:100,fmt:v=>v+'%'});
+  $('#highlightOut').innerHTML=res.highlights||esc(text);
+  $('#kwSummary').innerHTML=res.signalList.length
+    ? `<div class="eyebrow" style="margin-bottom:8px">Fraud signals detected (${res.signalList.length})</div><div style="display:flex;flex-wrap:wrap;gap:7px">`+res.signalList.map(s=>`<span class="chip ${s.type==='danger'?'chip-red':'chip-amber'}"><span class="dot"></span>${esc(s.label)}</span>`).join('')+`</div>`
+    : `<div style="color:var(--muted);font-size:13px">No suspicious tokens detected in this listing.</div>`;
+  $('#verdictDetail').innerHTML=detailHTML(res);
+  $('#detectResult').classList.add('show');
+  animateCharts($('#detectResult'));
+}
+function detailHTML(res){
+  const at=res.action, col=at.tone==='fraud'?'red':at.tone==='review'?'amber':'green';
+  const row=(k,val)=>`<div class="feature-row" style="margin:0"><div class="nm">${k}</div><div style="flex:1">${val}</div></div>`;
+  return `<div style="display:flex;flex-direction:column;gap:12px">
+    ${row('Verdict', chip(res.label))}
+    ${row('Risk level', chip(res.risk))}
+    ${row('Fraud score', `<span class="tnum" style="font-weight:700">${res.fraudScore}/100</span>`)}
+    ${row('Decision threshold', `<span class="tnum">${res.threshold}%</span>`)}
+    ${row('Account signals', `<span style="font-size:12.5px">${esc(res.meta.age)} · ${esc(res.meta.verified)} · ${esc(res.meta.engagement)} engagement</span>`)}
+    <div style="padding:13px 15px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border)">
+      <div class="eyebrow" style="margin-bottom:5px">Recommended action</div>
+      <div style="font-weight:700;color:var(--${col})">${esc(at.text)}</div></div></div>`;
+}
+function renderDetect(){
+  renderQuickCases();
+  if(STATE.lastAnalysis){
+    $('#detectIdle').style.display='none'; $('#detectLoading').style.display='none';
+    paintResult(STATE.lastAnalysis.text, STATE.lastAnalysis.res);
+    $('#detectStatus').textContent=STATE.lastAnalysis.res.label+' · '+STATE.lastAnalysis.res.confidence+'% conf';
+  } else {
+    $('#detectIdle').style.display=''; $('#detectLoading').style.display='none';
+    $('#detectResult').classList.remove('show'); $('#detectStatus').textContent='Awaiting input';
+  }
+}
+
+/* ============================================================
+   POSTS / MODERATION
+   ============================================================ */
+const postsState={page:1, per:8, sort:'id', dir:1};
+function postsFiltered(){
+  const q=($('#postsSearch')?.value||'').toLowerCase().trim();
+  const st=$('#filterStatus')?.value||'', cat=$('#filterCategory')?.value||'', rk=$('#filterRisk')?.value||'';
+  let rows=STATE.posts.filter(p=>{
+    if(st && p.status!==st) return false;
+    if(cat && p.category!==cat) return false;
+    if(rk && p.risk!==rk) return false;
+    if(q && !(p.text.toLowerCase().includes(q)||p.seller.toLowerCase().includes(q)||String(p.id).includes(q))) return false;
+    return true;
+  });
+  const {sort,dir}=postsState;
+  rows.sort((a,b)=>{ let x=a[sort],y=b[sort]; if(typeof x==='string'){x=x.toLowerCase();y=y.toLowerCase();} return x<y?-dir:x>y?dir:0; });
+  return rows;
+}
+function renderPosts(){
+  const v=$('#view-posts'); if(!v) return;
+  // populate filter selects once
+  const fc=$('#filterCategory');
+  if(fc && fc.options.length<=1){ fc.innerHTML='<option value="">All categories</option>'+CATEGORIES.map(c=>`<option>${c}</option>`).join(''); }
+  renderPostsTable();
+}
+function renderPostsTable(){
+  const rows=postsFiltered();
+  const per=postsState.per; const pages=Math.max(1,Math.ceil(rows.length/per));
+  if(postsState.page>pages) postsState.page=pages;
+  const slice=rows.slice((postsState.page-1)*per, postsState.page*per);
+  const arrow=k=>postsState.sort===k?`<span class="sortarrow">${postsState.dir>0?'▲':'▼'}</span>`:'<span class="sortarrow">↕</span>';
+  const head=`<thead><tr>
+    <th data-sort="id">ID${arrow('id')}</th>
+    <th class="no-sort">Listing</th>
+    <th data-sort="category">Category${arrow('category')}</th>
+    <th data-sort="location">Location${arrow('location')}</th>
+    <th data-sort="price">Price${arrow('price')}</th>
+    <th data-sort="status">Status${arrow('status')}</th>
+    <th data-sort="confidence">Conf.${arrow('confidence')}</th>
+    <th data-sort="risk">Risk${arrow('risk')}</th>
+    <th class="no-sort">Actions</th></tr></thead>`;
+  const body=slice.map(p=>`<tr>
+    <td class="tnum">#${p.id}</td>
+    <td><div style="font-weight:600;max-width:260px">${esc(truncate(p.text,64))}</div><div style="font-size:11.5px;color:var(--muted)">${esc(p.seller)}</div></td>
+    <td>${esc(p.category)}</td><td>${esc(p.location)}</td>
+    <td class="tnum">${rwf(p.price)}</td>
+    <td>${chip(p.status)}</td>
+    <td class="tnum">${p.confidence}%</td>
+    <td>${chip(p.risk)}</td>
+    <td><div style="display:flex;gap:4px">
+      <button class="btn btn-icon btn-ghost btn-sm" data-act="view" data-id="${p.id}" title="View"><svg class="ic ic-sm"><use href="#i-eye"/></svg></button>
+      <button class="btn btn-icon btn-ghost btn-sm" data-act="flag" data-id="${p.id}" title="Toggle verdict"><svg class="ic ic-sm"><use href="#i-flow"/></svg></button>
+      <button class="btn btn-icon btn-ghost btn-sm" data-act="del" data-id="${p.id}" title="Delete"><svg class="ic ic-sm"><use href="#i-trash"/></svg></button>
+    </div></td></tr>`).join('');
+  $('#postsTable').innerHTML=`<div class="tbl-wrap"><table class="tbl">${head}<tbody>${body||`<tr><td colspan="9"><div class="empty"><svg class="ic"><use href="#i-search"/></svg><h4>No listings match</h4><p>Try clearing filters or the search box.</p></div></td></tr>`}</tbody></table></div>`;
+  $('#postsPager').innerHTML=pagerHTML(rows.length, postsState.page, per);
+  // wire sort + page + actions
+  $$('#postsTable th[data-sort]').forEach(th=>th.onclick=()=>{ const k=th.dataset.sort; if(postsState.sort===k)postsState.dir*=-1; else {postsState.sort=k;postsState.dir=1;} renderPostsTable(); });
+  $$('#postsPager .pg[data-pg]').forEach(b=>b.onclick=()=>{ postsState.page=+b.dataset.pg; renderPostsTable(); });
+  $$('#postsTable [data-act]').forEach(b=>b.onclick=()=>postAction(b.dataset.act, +b.dataset.id));
+}
+function postAction(act, id){
+  const p=STATE.posts.find(x=>x.id===id); if(!p) return;
+  if(act==='view'){
+    const r=analyze(p.text, {age:'established',verified: p.seller && FRAUD_SELLERS.includes(p.seller)?'unverified':'verified', engagement:'high'});
+    openModal('Listing #'+p.id,
+      `<div style="display:flex;flex-direction:column;gap:14px">
+        <div style="padding:14px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border);line-height:1.55">${r.highlights}</div>
+        <div class="grid two-col">
+          <div>${hbars(r.features,{max:100,fmt:v=>v+'%'})}</div>
+          <div style="display:flex;flex-direction:column;gap:9px">
+            <div class="feature-row" style="margin:0"><div class="nm">Seller</div><div style="flex:1">${esc(p.seller)}</div></div>
+            <div class="feature-row" style="margin:0"><div class="nm">Category</div><div style="flex:1">${esc(p.category)}</div></div>
+            <div class="feature-row" style="margin:0"><div class="nm">Location</div><div style="flex:1">${esc(p.location)}</div></div>
+            <div class="feature-row" style="margin:0"><div class="nm">Price</div><div style="flex:1" class="tnum">${rwf(p.price)}</div></div>
+            <div class="feature-row" style="margin:0"><div class="nm">Verdict</div><div style="flex:1">${chip(p.prediction)} ${chip(p.risk)}</div></div>
+          </div>
+        </div></div>`,
+      `<button class="btn" onclick="closeModal()">Close</button><button class="btn btn-primary" id="mViewQueue">Send to review queue</button>`);
+    const q=$('#mViewQueue'); if(q) q.onclick=()=>{ queuePost(p); closeModal(); };
+  } else if(act==='flag'){
+    p.prediction = p.prediction==='Fraudulent'?'Genuine':'Fraudulent';
+    p.status = p.prediction; p.risk = p.prediction==='Fraudulent'?'High':'Low';
+    addAudit(`Toggled listing #${p.id} → ${p.prediction}`);
+    toast(`Listing #${p.id} marked ${p.prediction}.`, p.prediction==='Fraudulent'?'fraud':'genuine');
+    renderPostsTable(); updateReviewBadge();
+  } else if(act==='del'){
+    openModal('Delete listing #'+p.id, `<p style="color:var(--muted)">This removes the listing from the working set. This cannot be undone in the demo.</p>`,
+      `<button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-danger" id="mDel">Delete</button>`);
+    $('#mDel').onclick=()=>{ STATE.posts=STATE.posts.filter(x=>x.id!==id); STATE.reviewQueue=STATE.reviewQueue.filter(x=>x.id!==id); addAudit(`Deleted listing #${id}`); closeModal(); toast('Listing deleted.','warn'); renderPostsTable(); updateReviewBadge(); };
+  }
+}
+function queuePost(p){
+  if(!STATE.reviewQueue.find(x=>x.id===p.id)){ p.status='Pending'; STATE.reviewQueue.push(p); addAudit(`Sent listing #${p.id} to review queue`); updateReviewBadge(); toast('Sent to review queue.','review'); if(CURRENT_VIEW==='posts') renderPostsTable(); }
+}
+function addAudit(act){ STATE.audit.unshift({who:STATE.user?STATE.user.name:'System', act, time:new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}); }
+function openAddPost(){
+  openModal('Add listing',
+    `<div class="field"><label>Listing text</label><textarea class="textarea" id="apText" style="min-height:110px" placeholder="Paste the marketplace post…"></textarea></div>
+     <div class="grid two-col">
+       <div class="field"><label>Category</label><select class="select" id="apCat">${CATEGORIES.map(c=>`<option>${c}</option>`).join('')}</select></div>
+       <div class="field"><label>Seller</label><input class="input" id="apSeller" placeholder="Seller name"></div>
+     </div>`,
+    `<button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-primary" id="apSave">Analyze & add</button>`,true);
+  $('#apSave').onclick=()=>{
+    const text=$('#apText').value.trim(); if(!text){toast('Enter listing text.','warn');return;}
+    const r=analyze(text,{age:'new',verified:'unverified',engagement:'high'});
+    const id=Math.max(...STATE.posts.map(p=>p.id))+1;
+    const rec={id,text,category:$('#apCat').value,seller:$('#apSeller').value||'Unknown seller',location:pick(LOCATIONS),price:randInt(1,40)*25000,date:'2026-06-30',status:r.label,prediction:r.label,confidence:r.confidence,risk:r.risk,reviewer:'—'};
+    STATE.posts.unshift(rec); addAudit(`Added listing #${id} (${r.label})`); closeModal(); toast(`Listing added — classified ${r.label}.`, r.label==='Fraudulent'?'fraud':'genuine'); renderPostsTable(); updateReviewBadge();
+  };
+}
+function exportPosts(){
+  const cols=[{label:'ID',key:'id'},{label:'Text',key:'text'},{label:'Category',key:'category'},{label:'Seller',key:'seller'},{label:'Location',key:'location'},{label:'Price',key:'price'},{label:'Prediction',key:'prediction'},{label:'Confidence',key:'confidence'},{label:'Risk',key:'risk'},{label:'Status',key:'status'}];
+  download('fraudguard_listings.csv', toCSV(postsFiltered(), cols), 'text/csv');
+}
+
+/* ============================================================
+   DATASET
+   ============================================================ */
+const dsState={page:1, per:9};
+function dsFiltered(){
+  const q=($('#dsSearch')?.value||'').toLowerCase().trim();
+  const lab=$('#dsLabel')?.value||'', cat=$('#dsCat')?.value||'';
+  return DATASET.filter(d=>{
+    if(lab && d.status!==lab) return false;
+    if(cat && d.category!==cat) return false;
+    if(q && !(d.text.toLowerCase().includes(q)||d.category.toLowerCase().includes(q))) return false;
+    return true;
+  });
+}
+function renderDataset(){
+  const v=$('#view-dataset'); if(!v) return;
+  const dsc=$('#dsCat'); if(dsc && dsc.options.length<=1){ dsc.innerHTML='<option value="">All categories</option>'+CATEGORIES.map(c=>`<option>${c}</option>`).join(''); }
+  const fraud=DATASET.filter(d=>d.status==='Fraudulent').length;
+  $('#datasetStats').innerHTML=
+    statCard('i-db','var(--royal)','var(--royal-soft)',nf(DATASET.length),'Total records',null,true,null)+
+    statCard('i-ban','var(--red)','var(--red-soft)',nf(fraud),'Fraudulent labels',null,true,null)+
+    statCard('i-verified','var(--green)','var(--green-soft)',nf(DATASET.length-fraud),'Genuine labels',null,true,null)+
+    statCard('i-tag','var(--cyan)','var(--cyan-soft)',CATEGORIES.length,'Categories',null,true,null);
+  const catCounts={}; DATASET.forEach(d=>catCounts[d.category]=(catCounts[d.category]||0)+1);
+  const cats=Object.entries(catCounts).sort((a,b)=>b[1]-a[1]).slice(0,7);
+  $('#dsCatChart').innerHTML=vbars(cats.map(([k,v])=>({label:truncate(k,6),value:v,color:'var(--royal)'})),{h:190});
+  const geo={}; DATASET.forEach(d=>geo[d.location]=(geo[d.location]||0)+1);
+  const geoTop=Object.entries(geo).sort((a,b)=>b[1]-a[1]).slice(0,7);
+  $('#dsGeoChart').innerHTML=hbars(geoTop.map(([k,v])=>({label:k,value:v,color:'var(--cyan)'})),{cls:'kwbar'});
+  renderDsTable();
+}
+function renderDsTable(){
+  const rows=dsFiltered(); const per=dsState.per; const pages=Math.max(1,Math.ceil(rows.length/per));
+  if(dsState.page>pages) dsState.page=pages;
+  const slice=rows.slice((dsState.page-1)*per, dsState.page*per);
+  const body=slice.map(d=>`<tr>
+    <td class="tnum">#${d.id}</td>
+    <td><div style="max-width:340px">${esc(truncate(d.text,80))}</div></td>
+    <td>${esc(d.category)}</td>
+    <td>${chip(d.status)}</td></tr>`).join('');
+  $('#dsTable').innerHTML=`<div class="tbl-wrap"><table class="tbl"><thead><tr><th class="no-sort">ID</th><th class="no-sort">Text sample</th><th class="no-sort">Category</th><th class="no-sort">Label</th></tr></thead><tbody>${body||'<tr><td colspan="4"><div class="empty"><p>No records match.</p></div></td></tr>'}</tbody></table></div>`;
+  $('#dsPager').innerHTML=pagerHTML(rows.length, dsState.page, per);
+  $$('#dsPager .pg[data-pg]').forEach(b=>b.onclick=()=>{ dsState.page=+b.dataset.pg; renderDsTable(); });
+}
+function exportDataset(){
+  download('fraudguard_dataset.json', JSON.stringify(DATASET,null,2), 'application/json');
+}
+</script>
+<script>
+/* ============================================================
+   Block 4a: sellers / models / pipeline
+   ============================================================ */
+let sellerTab='blacklist', SELLER_CACHE=null;
+function sellerData(){
+  if(SELLER_CACHE) return SELLER_CACHE;
+  const mk=(name,bad)=>{ const posts=DATASET.filter(d=>d.seller===name);
+    return {name, listings:posts.length, fraud:posts.filter(d=>d.status==='Fraudulent').length,
+      reports:bad?randInt(4,19):0, trust:bad?randInt(6,32):randInt(86,99), loc:pick(LOCATIONS), last:`2026-06-${pad(randInt(1,28))}`}; };
+  SELLER_CACHE={ blacklist:FRAUD_SELLERS.map(n=>mk(n,true)), trusted:GENUINE_SELLERS.map(n=>mk(n,false)) };
+  return SELLER_CACHE;
+}
+function renderSellers(){
+  const v=$('#view-sellers'); if(!v) return;
+  $$('#sellerTabs .tab').forEach(t=>t.classList.toggle('on', t.dataset.tab===sellerTab));
+  const bad=sellerTab==='blacklist';
+  const rows=sellerData()[sellerTab];
+  const tbl=$('#sellerTable');
+  tbl.querySelector('thead').innerHTML=`<tr><th class="no-sort">Seller</th><th class="no-sort">Location</th><th class="no-sort">Listings</th><th class="no-sort">Fraud hits</th><th class="no-sort">${bad?'Reports':'Trust score'}</th><th class="no-sort">Status</th><th class="no-sort">Last seen</th></tr>`;
+  tbl.querySelector('tbody').innerHTML=rows.map(s=>`<tr>
+    <td style="font-weight:600">${esc(s.name)}</td><td>${esc(s.loc)}</td>
+    <td class="tnum">${s.listings}</td><td class="tnum">${s.fraud}</td>
+    <td class="tnum">${bad?s.reports:s.trust+'%'}</td>
+    <td>${bad?chip('Blacklisted'):chip('Verified')}</td>
+    <td class="tnum">${s.last}</td></tr>`).join('');
+}
+
+const MODELS=[
+  {name:'Logistic Regression', tag:'Baseline · TF-IDF', acc:88.4, prec:86.1, rec:84.7, f1:85.4, ms:8,  color:'var(--cyan)'},
+  {name:'Naïve Bayes',         tag:'Probabilistic',     acc:85.9, prec:83.2, rec:88.0, f1:85.5, ms:5,  color:'var(--amber)'},
+  {name:'BERT (fine-tuned)',   tag:'Transformer',       acc:94.8, prec:93.6, rec:96.0, f1:94.8, ms:142, color:'var(--royal)', best:true}
+];
+function scatterPlot(points){
+  const W=440,H=210,pad=38;
+  const xMax=160, yMin=82, yMax=98;
+  const xx=v=>pad+(v/xMax)*(W-pad*1.4);
+  const yy=v=>H-pad-((v-yMin)/(yMax-yMin))*(H-pad-18);
+  let grid='';for(let g=0;g<=4;g++){const y=pad+g*((H-pad-18)/4);grid+=`<line x1="${pad}" y1="${y}" x2="${W-12}" y2="${y}" style="stroke:var(--border)"/>`;}
+  const dots=points.map(p=>`<circle cx="${xx(p.ms)}" cy="${yy(p.acc)}" r="9" style="fill:${p.color};opacity:.85"/>
+    <text x="${xx(p.ms)}" y="${yy(p.acc)-13}" text-anchor="middle" style="fill:var(--ink-soft);font-size:10.5px;font-weight:700">${esc(p.name.split(' ')[0])}</text>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">${grid}
+    <text x="${W/2}" y="${H-6}" text-anchor="middle" style="fill:var(--muted);font-size:11px">Latency (ms) →</text>
+    <text x="12" y="${pad-12}" style="fill:var(--muted);font-size:11px">Accuracy %</text>${dots}</svg>`;
+}
+function renderModels(){
+  const v=$('#view-models'); if(!v) return;
+  $('#modelCards').innerHTML=MODELS.map(m=>`
+    <div class="card card-pad" style="${m.best?'border-color:var(--royal);box-shadow:0 0 0 2px var(--royal-soft)':''}">
+      <div style="display:flex;justify-content:space-between;align-items:start">
+        <div><div style="font-weight:800;font-size:16px">${esc(m.name)}</div><div style="font-size:12px;color:var(--muted)">${esc(m.tag)}</div></div>
+        ${m.best?'<span class="chip chip-blue"><span class="dot"></span>Best</span>':''}</div>
+      <div style="display:flex;gap:18px;margin-top:16px">
+        <div><div class="tnum" style="font-size:26px;font-weight:800;color:${m.color}">${m.f1}</div><div style="font-size:11px;color:var(--muted)">F1 score</div></div>
+        <div><div class="tnum" style="font-size:26px;font-weight:800">${m.acc}%</div><div style="font-size:11px;color:var(--muted)">Accuracy</div></div>
+      </div>
+      <div style="margin-top:16px">${hbars([{label:'Precision',value:m.prec,color:m.color},{label:'Recall',value:m.rec,color:m.color}],{max:100,fmt:v=>v+'%'})}</div>
+    </div>`).join('');
+  $('#modelMetricChart').innerHTML=vbars(MODELS.map(m=>({label:m.name.split(' ')[0],value:m.f1,color:m.color})),{h:200});
+  $('#modelScatter').innerHTML=scatterPlot(MODELS);
+  const t=$('#modelTable');
+  t.querySelector('thead').innerHTML='<tr><th class="no-sort">Model</th><th class="no-sort">Accuracy</th><th class="no-sort">Precision</th><th class="no-sort">Recall</th><th class="no-sort">F1</th><th class="no-sort">Latency</th></tr>';
+  t.querySelector('tbody').innerHTML=MODELS.map(m=>`<tr><td style="font-weight:600">${esc(m.name)} ${m.best?chip('Active','chip-blue'):''}</td><td class="tnum">${m.acc}%</td><td class="tnum">${m.prec}%</td><td class="tnum">${m.rec}%</td><td class="tnum">${m.f1}%</td><td class="tnum">${m.ms} ms</td></tr>`).join('');
+  animateCharts(v);
+}
+
+const PIPE_STAGES=[
+  {icon:'i-inbox', t:'Raw post', d:'Original marketplace text', out:'"URGENT!! Invest now and earn 100% guaranteed returns!! Click this link, pay a deposit via MoMo today!!"'},
+  {icon:'i-edit',  t:'Cleaning', d:'Lowercase, strip noise', out:'urgent invest now and earn 100 guaranteed returns click this link pay a deposit via momo today'},
+  {icon:'i-scan',  t:'Tokenization', d:'Split into tokens', out:'[urgent] [invest] [now] [and] [earn] [100] [guaranteed] [returns] [click] [this] [link] [pay] [deposit] [momo] [today]'},
+  {icon:'i-filter',t:'Stop-word removal', d:'Drop low-signal words', out:'[urgent] [invest] [earn] [100] [guaranteed] [returns] [click] [link] [pay] [deposit] [momo] [today]'},
+  {icon:'i-flow',  t:'Lemmatization', d:'Normalize word forms', out:'[urgent] [invest] [earn] [guarantee] [return] [click] [link] [pay] [deposit] [momo] [today]'},
+  {icon:'i-sliders',t:'Feature extraction', d:'TF-IDF + embeddings', out:'vector(768) ▸ urgency=0.94 · guarantee=0.91 · payment=0.88 · link=0.83 …'},
+  {icon:'i-cpu',   t:'BERT encoder', d:'Contextual representation', out:'[CLS] embedding → fraud logit 4.21 · genuine logit -3.07'},
+  {icon:'i-target',t:'Classification', d:'Softmax decision', out:'P(fraud)=0.981 · P(genuine)=0.019'},
+  {icon:'i-shield',t:'Prediction', d:'Final verdict', out:'VERDICT: FRAUDULENT · confidence 98% · risk HIGH'}
+];
+function renderPipeline(){
+  const v=$('#view-pipeline'); if(!v) return;
+  $('#pipelineFlow').innerHTML=PIPE_STAGES.map((s,i)=>`
+    <div class="pipe-node" data-i="${i}"><div class="pn"><svg class="ic ic-sm"><use href="#${s.icon}"/></svg></div>
+      <div><div class="pt">${esc(s.t)}</div><div class="pd">${esc(s.d)}</div></div></div>
+    ${i<PIPE_STAGES.length-1?'<div class="pipe-arrow"></div>':''}`).join('');
+}
+function runPipeline(){
+  const nodes=$$('#pipelineFlow .pipe-node'); if(!nodes.length) return;
+  nodes.forEach(n=>n.classList.remove('lit'));
+  $('#pipeOut').textContent=''; let i=0;
+  const step=()=>{
+    if(i>0) nodes[i-1].classList.remove('lit');
+    if(i<nodes.length){ nodes[i].classList.add('lit'); const s=PIPE_STAGES[i];
+      $('#pipeStageLabel').textContent=`${i+1}/${nodes.length} · ${s.t}`;
+      $('#pipeOut').textContent=s.out; i++; setTimeout(step, 780); }
+    else { nodes[nodes.length-1].classList.add('lit'); $('#pipeStageLabel').textContent='Complete'; toast('Pipeline trace complete.','genuine'); }
+  };
+  step();
+}
+</script>
+<script>
+/* ============================================================
+   Block 4b: analytics / reports
+   ============================================================ */
+const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+function heatColor(v,max){ const a=0.12+0.88*(v/max); return `rgba(224,70,59,${a.toFixed(2)})`; }
+function renderAnalytics(){
+  const v=$('#view-analytics'); if(!v) return;
+  const seed=mulberry32(7777); const r=()=>seed();
+  let max=1; const grid=[];
+  for(let w=0;w<6;w++){ const row=[]; for(let d=0;d<7;d++){ const val=Math.floor(r()*12*(d>=4?1.5:1)); row.push(val); if(val>max)max=val; } grid.push(row); }
+  let hm=`<div class="heat-lbl"></div>`+DAYS.map(d=>`<div class="heat-lbl">${d}</div>`).join('');
+  grid.forEach((row,w)=>{ hm+=`<div class="heat-lbl">Wk ${w+1}</div>`+row.map(val=>`<div class="heat-cell" style="background:${heatColor(val,max)}" title="${val} fraud cases">${val||''}</div>`).join(''); });
+  $('#heatmap').innerHTML=hm;
+  $('#heatLegend').innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:11.5px;color:var(--muted)">Low <div style="flex:1;max-width:140px;height:9px;border-radius:99px;background:linear-gradient(90deg,${heatColor(1,max)},${heatColor(max,max)})"></div> High</div>`;
+
+  const KW=[['guaranteed',54],['deposit',49],['urgent',43],['whatsapp',38],['100%',34],['click link',29],['no refund',24],['western union',19]];
+  $('#topKeywords').innerHTML=KW.map(([k,c])=>`<div class="kwbar"><div class="nm">${esc(k)}</div><div class="track bar-track"><div class="bar-fill" style="width:0;background:var(--red)" data-w="${(c/54*100).toFixed(0)}%"></div></div><div class="ct">${c}</div></div>`).join('');
+
+  const buckets=[0,0,0,0,0]; STATE.posts.forEach(p=>{ const b=clamp(Math.floor((p.confidence-50)/10),0,4); buckets[b]++; });
+  $('#confDist').innerHTML=vbars(buckets.map((val,i)=>({label:`${50+i*10}-${60+i*10}`,value:val,color:'var(--royal)'})),{h:190});
+
+  const geo={}; STATE.posts.filter(p=>p.prediction==='Fraudulent').forEach(p=>geo[p.location]=(geo[p.location]||0)+1);
+  const top=Object.entries(geo).sort((a,b)=>b[1]-a[1]).slice(0,7);
+  $('#geoHotspots').innerHTML=hbars(top.map(([k,val])=>({label:k,value:val,color:'var(--red)'})),{cls:'kwbar'});
+
+  renderFpSim();
+  animateCharts(v);
+}
+function renderFpSim(){
+  const host=$('#fpSim'); if(!host) return;
+  const th=STATE.settings.threshold;
+  const sseed=mulberry32(2468);
+  let tp=0,fp=0,fn=0,tn=0;
+  DATASET.forEach(d=>{ const noise=(sseed()-0.5)*30; const score=clamp((d.status==='Fraudulent'?78:24)+noise,0,100);
+    const flagged=score>=th;
+    if(d.status==='Fraudulent'){ flagged?tp++:fn++; } else { flagged?fp++:tn++; } });
+  host.innerHTML=`
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:6px 0 16px">
+      <span style="font-weight:600;font-size:13px">Decision threshold</span>
+      <input type="range" class="range" id="fpRange" min="40" max="90" value="${th}">
+      <span class="tnum" id="fpThVal" style="font-weight:800;font-size:16px">${th}%</span>
+    </div>
+    <div class="grid stat-grid" style="grid-template-columns:repeat(4,1fr)">
+      ${statCard('i-check','var(--green)','var(--green-soft)',tp,'True positives',null)}
+      ${statCard('i-verified','var(--royal)','var(--royal-soft)',tn,'True negatives',null)}
+      ${statCard('i-alert','var(--amber)','var(--amber-soft)',fp,'False positives',null)}
+      ${statCard('i-x','var(--red)','var(--red-soft)',fn,'Missed frauds',null)}
+    </div>`;
+  const rng2=$('#fpRange');
+  rng2.oninput=()=>{ STATE.settings.threshold=+rng2.value; const tv=$('#thresholdVal'); if(tv)tv.textContent=rng2.value+'%'; const sr=$('#setThreshold'); if(sr)sr.value=rng2.value; renderFpSim(); };
+}
+
+function buildReport(){
+  const s=postStats(); const fraudPct=Math.round(s.fraud/s.total*100);
+  const catCounts={}; STATE.posts.forEach(p=>{ if(p.prediction==='Fraudulent') catCounts[p.category]=(catCounts[p.category]||0)+1; });
+  const cats=Object.entries(catCounts).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  return {s,fraudPct,cats};
+}
+function renderReports(){
+  const v=$('#view-reports'); if(!v) return;
+  const {s,fraudPct,cats}=buildReport();
+  const now=new Date().toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  $('#reportSheet').innerHTML=`<div class="report-sheet">
+    <div style="display:flex;justify-content:space-between;align-items:start;border-bottom:2px solid #0a1a33;padding-bottom:14px">
+      <div><h1>FraudGuard AI — Screening Report</h1><div style="font-size:12.5px;color:#445">Facebook Marketplace fraud detection · Rwanda pilot</div></div>
+      <div style="text-align:right;font-size:12px;color:#445">Generated<br><strong>${now}</strong><br>By ${esc(STATE.user?STATE.user.name:'—')}</div>
+    </div>
+    <h3 style="margin-top:18px;color:#0a1a33">1. Executive summary</h3>
+    <p style="font-size:13px;line-height:1.6">During the reporting period the system screened <strong>${nf(s.total)}</strong> marketplace listings. <strong>${nf(s.fraud)}</strong> (${fraudPct}%) were classified as fraudulent and <strong>${nf(s.genuine)}</strong> as genuine, with an average model confidence of <strong>${s.avgConf}%</strong>. ${nf(s.pending)} listings are awaiting human review.</p>
+    <table><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody>
+      <tr><td>Listings analysed</td><td>${nf(s.total)}</td></tr>
+      <tr><td>Fraudulent</td><td>${nf(s.fraud)} (${fraudPct}%)</td></tr>
+      <tr><td>Genuine</td><td>${nf(s.genuine)}</td></tr>
+      <tr><td>Pending review</td><td>${nf(s.pending)}</td></tr>
+      <tr><td>Model accuracy / F1</td><td>94.8% / 0.948</td></tr>
+      <tr><td>Active classifier</td><td>BERT (fine-tuned)</td></tr>
+    </tbody></table>
+    <h3 style="margin-top:18px;color:#0a1a33">2. Fraud by category</h3>
+    <table><thead><tr><th>Category</th><th>Fraudulent listings</th></tr></thead><tbody>
+      ${cats.map(([k,val])=>`<tr><td>${esc(k)}</td><td>${val}</td></tr>`).join('')}
+    </tbody></table>
+    <h3 style="margin-top:18px;color:#0a1a33">3. Recommendation</h3>
+    <p style="font-size:13px;line-height:1.6">Continue automated screening with human-in-the-loop review for borderline cases near the ${STATE.settings.threshold}% decision threshold. Prioritise enforcement against repeat blacklisted sellers and high-volume categories (investment, loans, electronics).</p>
+    <div style="margin-top:22px;font-size:11px;color:#667;border-top:1px solid #d8e0ec;padding-top:10px">This is a research prototype. Classifications are model estimates and should be confirmed by a human moderator before enforcement.</div>
+  </div>`;
+}
+function reportCSV(){
+  const {s,cats}=buildReport();
+  let txt='Metric,Value\nListings,'+s.total+'\nFraud,'+s.fraud+'\nGenuine,'+s.genuine+'\nPending,'+s.pending+'\n\nCategory,FraudCount\n'+cats.map(([k,val])=>`${k},${val}`).join('\n');
+  download('fraudguard_report.csv', txt, 'text/csv');
+}
+function reportJSON(){ download('fraudguard_report.json', JSON.stringify(buildReport(),null,2),'application/json'); }
+function printReport(){ window.print(); }
+</script>
+<script>
+/* ============================================================
+   Block 4c: users / settings / help / notifications / tour
+   ============================================================ */
+const PERMS=[
+  {p:'View detections', Administrator:1, Researcher:1, 'Data Analyst':1, Moderator:1},
+  {p:'Run analysis',    Administrator:1, Researcher:1, 'Data Analyst':1, Moderator:1},
+  {p:'Edit listings',   Administrator:1, Researcher:0, 'Data Analyst':1, Moderator:1},
+  {p:'Manage dataset',  Administrator:1, Researcher:1, 'Data Analyst':1, Moderator:0},
+  {p:'Manage users',    Administrator:1, Researcher:0, 'Data Analyst':0, Moderator:0},
+  {p:'Change settings', Administrator:1, Researcher:0, 'Data Analyst':0, Moderator:0}
+];
+function renderUsers(){
+  const v=$('#view-users'); if(!v) return;
+  const ut=$('#usersTable');
+  ut.querySelector('thead').innerHTML='<tr><th class="no-sort">Operator</th><th class="no-sort">Role</th><th class="no-sort">Status</th><th class="no-sort">Last active</th></tr>';
+  ut.querySelector('tbody').innerHTML=DEMO_ACCOUNTS.map((a,i)=>`<tr>
+    <td><div style="display:flex;align-items:center;gap:10px"><span style="width:30px;height:30px;border-radius:9px;background:${a.color};color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700">${a.initials}</span><div><div style="font-weight:600">${esc(a.name)}</div><div style="font-size:11px;color:var(--muted)">${a.user}@fraudguard.rw</div></div></div></td>
+    <td>${esc(a.role)}</td><td>${chip(i===3?'Pending':'Active', i===3?'chip-amber':'chip-green')}</td><td class="tnum">${i===0?'now':randInt(2,9)+'h ago'}</td></tr>`).join('');
+  $('#auditLog').innerHTML=STATE.audit.slice(0,8).map(a=>`<div class="tl-item"><span class="tl-dot"></span><div class="tl-t">${esc(a.act)}</div><div class="tl-m">${esc(a.who)}</div><div class="tl-g">${esc(a.time)}</div></div>`).join('');
+  const roles=['Administrator','Researcher','Data Analyst','Moderator'];
+  const pt=$('#permTable');
+  pt.querySelector('thead').innerHTML='<tr><th class="no-sort">Permission</th>'+roles.map(r=>`<th class="no-sort" style="text-align:center">${r}</th>`).join('')+'</tr>';
+  pt.querySelector('tbody').innerHTML=PERMS.map(row=>`<tr><td style="font-weight:600">${esc(row.p)}</td>`+roles.map(r=>`<td style="text-align:center">${row[r]?'<svg class="ic ic-sm" style="color:var(--green)"><use href="#i-check"/></svg>':'<svg class="ic ic-sm" style="color:var(--muted)"><use href="#i-x"/></svg>'}</td>`).join('')+'</tr>').join('');
+}
+function openAddUser(){
+  openModal('Add operator',
+    `<div class="grid two-col"><div class="field"><label>Full name</label><input class="input" id="auName" placeholder="e.g. Grace Umutoni"></div>
+     <div class="field"><label>Role</label><select class="select" id="auRole"><option>Moderator</option><option>Data Analyst</option><option>Researcher</option><option>Administrator</option></select></div></div>`,
+    `<button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-primary" id="auSave">Add operator</button>`,true);
+  $('#auSave').onclick=()=>{ const n=$('#auName').value.trim(); if(!n){toast('Enter a name.','warn');return;} addAudit(`Invited operator ${n} (${$('#auRole').value})`); closeModal(); toast('Operator invited (demo).','genuine'); };
+}
+
+function renderSettings(){
+  const v=$('#view-settings'); if(!v) return; const s=STATE.settings;
+  $('#setDark').checked = STATE.theme==='dark';
+  $('#setNotif').checked = s.notif; $('#setAutosave').checked = s.autosave;
+  $('#setLang').value = s.lang; $('#setSensitivity').value = s.sensitivity;
+  const thr=$('#setThreshold'); thr.value=s.threshold; $('#thresholdVal').textContent=s.threshold+'%';
+  $('#setDark').onchange=e=>applyTheme(e.target.checked?'dark':'light');
+  $('#setNotif').onchange=e=>{ s.notif=e.target.checked; };
+  $('#setAutosave').onchange=e=>{ s.autosave=e.target.checked; };
+  $('#setLang').onchange=e=>{ s.lang=e.target.value; toast('Language set to '+e.target.value+' (demo).','genuine'); };
+  $('#setSensitivity').onchange=e=>{ s.sensitivity=e.target.value; };
+  thr.oninput=e=>{ s.threshold=+e.target.value; $('#thresholdVal').textContent=e.target.value+'%'; };
+  $('#setModel').onchange=e=>{ s.model=e.target.value; };
+  $('#saveSettings').onclick=()=>{ addAudit('Updated settings (threshold '+s.threshold+'%)'); toast('Settings saved.','genuine'); if(STATE.lastAnalysis){ STATE.lastAnalysis.res=analyze(STATE.lastAnalysis.text,detectMeta); } };
+  $('#resetSettings').onclick=()=>{ Object.assign(s,{threshold:60,sensitivity:'Balanced',notif:true,autosave:true,lang:'English'}); applyTheme('light'); renderSettings(); toast('Settings reset to defaults.','review'); };
+  $('#changePass').onclick=()=>openModal('Change password',
+    `<div class="field"><label>Current password</label><input class="input" type="password"></div>
+     <div class="field"><label>New password</label><input class="input" type="password"></div>`,
+    `<button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="closeModal();toast('Password updated (demo).','genuine')">Update</button>`);
+}
+
+let helpTab='guide';
+const HELP_CONTENT={
+  guide:()=>`<div class="card card-pad"><h3 style="font-size:16px;font-weight:800;margin-bottom:10px">Using the console</h3>
+    <div style="display:flex;flex-direction:column;gap:12px;font-size:13.5px;line-height:1.6;color:var(--ink-soft)">
+      <div><strong>Live Detection</strong> — paste any marketplace listing, optionally set account metadata, and run the detector. You get a verdict, a confidence ring, a risk gauge, a feature breakdown, and highlighted suspicious tokens.</div>
+      <div><strong>Listings & Moderation</strong> — browse the working set of 150 sample listings. Search, filter, sort, toggle a verdict, send items to the review queue, or export to CSV.</div>
+      <div><strong>Dataset</strong> — inspect the labelled training corpus that backs the models, with category and geographic breakdowns.</div>
+      <div><strong>Models & Pipeline</strong> — compare the three classifiers and watch a post move through NLP preprocessing into a BERT classification.</div>
+      <div><strong>Analytics & Reports</strong> — explore fraud patterns and generate a printable screening report.</div>
+    </div></div>`,
+  research:()=>`<div class="card card-pad"><h3 style="font-size:16px;font-weight:800;margin-bottom:10px">Research summary</h3>
+    <p style="font-size:13.5px;line-height:1.65;color:var(--ink-soft)">This prototype demonstrates an AI-based fake-news / fraud detection system for identifying fraudulent business information on Facebook Marketplace. Listing text is preprocessed with standard NLP steps (cleaning, tokenization, stop-word removal, lemmatization) and converted to features via TF-IDF and contextual embeddings. Three classifiers — Logistic Regression, Naïve Bayes, and a fine-tuned BERT model — are benchmarked, with BERT achieving the strongest results (≈94.8% accuracy, 0.948 F1). Account-level metadata such as age, verification status, and engagement velocity supplements the text signal. Explainability is provided by highlighting the tokens that most influenced each decision.</p>
+    <div style="margin-top:14px">${hbars(MODELS.map(m=>({label:m.name,value:m.f1,color:m.color})),{max:100,fmt:v=>v+'% F1'})}</div></div>`,
+  about:()=>`<div class="card card-pad"><h3 style="font-size:16px;font-weight:800;margin-bottom:10px">About & references</h3>
+    <p style="font-size:13.5px;line-height:1.65;color:var(--ink-soft)">FraudGuard AI is a self-contained demonstration interface built to visualise a marketplace fraud-detection research methodology. All data shown is synthetic and generated for illustration; no real users, sellers, or live Facebook data are involved.</p>
+    <div style="margin-top:14px;font-size:12.5px;color:var(--muted);line-height:1.7">
+      <div><strong>Selected references</strong></div>
+      <div>• Devlin et al. (2019) — BERT: Pre-training of Deep Bidirectional Transformers.</div>
+      <div>• Shu et al. (2017) — Fake News Detection on Social Media: A Data Mining Perspective.</div>
+      <div>• Ngai et al. (2011) — The application of data mining techniques in financial fraud detection.</div>
+    </div>
+    <div style="margin-top:14px;font-size:12px;color:var(--muted)">Build v2026.06 · Prototype · Not for production enforcement.</div></div>`,
+  shortcuts:()=>`<div class="card card-pad"><h3 style="font-size:16px;font-weight:800;margin-bottom:12px">Keyboard shortcuts</h3>
+    <div class="tbl-wrap"><table class="tbl" style="min-width:0"><tbody>
+      ${[['/','Focus global search'],['g then d','Go to dashboard'],['g then a','Go to live detection'],['g then l','Go to listings'],['n','Open notifications'],['t','Toggle dark mode'],['Esc','Close dialog / drawer']].map(([k,d])=>`<tr><td style="width:130px"><kbd style="font-family:var(--mono);background:var(--surface-3);padding:2px 8px;border-radius:6px;font-size:12px">${esc(k)}</kbd></td><td>${esc(d)}</td></tr>`).join('')}
+    </tbody></table></div></div>`
+};
+function renderHelp(){
+  const v=$('#view-help'); if(!v) return;
+  $$('#helpTabs .tab').forEach(t=>t.classList.toggle('on', t.dataset.tab===helpTab));
+  $('#helpContent').innerHTML=(HELP_CONTENT[helpTab]||HELP_CONTENT.guide)();
+}
+
+function renderNotifs(){
+  const list=$('#notifList'); if(!list) return;
+  const tone2bg={fraud:'var(--red-soft)',review:'var(--amber-soft)',genuine:'var(--green-soft)'};
+  const tone2col={fraud:'var(--red)',review:'var(--amber)',genuine:'var(--green)'};
+  list.innerHTML=STATE.notifications.map(n=>`<div class="notif-item" style="${n.read?'opacity:.6':''}">
+    <div class="ni" style="background:${tone2bg[n.tone]};color:${tone2col[n.tone]}"><svg class="ic ic-sm"><use href="#${n.icon}"/></svg></div>
+    <div style="flex:1"><div class="nt">${esc(n.title)}</div><div class="nm">${esc(n.body)}</div><div class="ng">${esc(n.time)}</div></div></div>`).join('');
+}
+function openNotifs(){ $('#notifDrawer').classList.add('on'); }
+function closeNotifs(){ $('#notifDrawer').classList.remove('on'); }
+function markAllRead(){ STATE.notifications.forEach(n=>n.read=true); renderNotifs(); updateReviewBadge(); }
+
+let tourShown=false, tourStep=0;
+const TOUR=[
+  {sel:'.sb-link[data-view="detect"]', title:'Start with live detection', body:'Paste any marketplace listing here and the AI explains whether it looks fraudulent — and why.'},
+  {sel:'#globalSearch', title:'Search anywhere', body:'Jump to listings, sellers or views from anywhere in the app.'},
+  {sel:'#notifBtn', title:'Stay alerted', body:'High-risk detections and queue updates surface here in real time.'},
+  {sel:'#themeBtn', title:'Make it yours', body:'Toggle dark mode any time. That\u2019s the tour — explore freely!'}
+];
+function maybeTour(){ if(tourShown) return; tourShown=true; tourStep=0; setTimeout(showTour, 650); }
+function showTour(){
+  const box=$('#tour'); const step=TOUR[tourStep]; const anchor=$(step.sel);
+  if(!anchor){ box.classList.remove('on'); return; }
+  const r=anchor.getBoundingClientRect();
+  let top=r.bottom+10, left=r.left;
+  if(left+300>window.innerWidth-16) left=window.innerWidth-316;
+  if(top+170>window.innerHeight-16) top=r.top-180;
+  box.style.top=Math.max(10,top)+'px'; box.style.left=Math.max(10,left)+'px';
+  box.innerHTML=`<h4>${esc(step.title)}</h4><p>${esc(step.body)}</p>
+    <div class="tour-foot"><div class="dots">${TOUR.map((_,i)=>`<i class="${i===tourStep?'on':''}"></i>`).join('')}</div>
+    <div style="display:flex;gap:8px"><button class="btn btn-sm btn-ghost" id="tourSkip">Skip</button><button class="btn btn-sm btn-primary" id="tourNext">${tourStep<TOUR.length-1?'Next':'Done'}</button></div></div>`;
+  box.classList.add('on');
+  $('#tourSkip').onclick=()=>box.classList.remove('on');
+  $('#tourNext').onclick=()=>{ tourStep++; if(tourStep>=TOUR.length){ box.classList.remove('on'); } else showTour(); };
+}
+</script>
+<script>
+/* ============================================================
+   Block 5: global wiring + init
+   ============================================================ */
+function wireGlobal(){
+  /* sidebar nav */
+  $$('.sb-link[data-view]').forEach(l=>l.addEventListener('click', e=>{ e.preventDefault(); navTo(l.dataset.view); }));
+  $$('[data-goto]').forEach(l=>l.addEventListener('click', e=>{ e.preventDefault(); navTo(l.dataset.goto); }));
+  $('#hambBtn')?.addEventListener('click', ()=>{ const s=$('#sidebar'); s.classList.contains('open')?closeSidebar():openSidebar(); });
+  $('#sbBackdrop')?.addEventListener('click', closeSidebar);
+
+  /* theme */
+  $('#themeBtn')?.addEventListener('click', toggleTheme);
+  $('#loginThemeBtn')?.addEventListener('click', toggleTheme);
+
+  /* login */
+  $('#loginBtn')?.addEventListener('click', doLogin);
+  $('#loginPass')?.addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+  $('#loginUser')?.addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+  $('#forgotLink')?.addEventListener('click', e=>{ e.preventDefault(); toast('Demo accounts don\u2019t require a password reset — pick one below.','review'); });
+  $('#footLogout')?.addEventListener('click', e=>{ e.preventDefault(); logout(); });
+
+  /* notifications drawer */
+  $('#notifBtn')?.addEventListener('click', openNotifs);
+  $('#closeNotif')?.addEventListener('click', closeNotifs);
+  $('#markRead')?.addEventListener('click', markAllRead);
+
+  /* overlay click-outside closes modal */
+  $('#overlay')?.addEventListener('click', e=>{ if(e.target.id==='overlay') closeModal(); });
+
+  /* global search */
+  $('#globalSearch')?.addEventListener('keydown', e=>{
+    if(e.key==='Enter'){
+      const q=e.target.value.trim(); if(!q) return;
+      navTo('posts'); setTimeout(()=>{ const s=$('#postsSearch'); if(s){ s.value=q; renderPostsTable(); } },30);
+    }
+  });
+
+  /* keyboard shortcuts */
+  let gPending=false, gTimer=null;
+  document.addEventListener('keydown', e=>{
+    const tag=(e.target.tagName||'').toLowerCase();
+    const typing = tag==='input'||tag==='textarea'||tag==='select'||e.target.isContentEditable;
+    if(e.key==='Escape'){ closeModal(); closeNotifs(); $('#tour').classList.remove('on'); return; }
+    if(typing) return;
+    if(e.key==='/'){ e.preventDefault(); $('#globalSearch')?.focus(); return; }
+    if(e.key==='t'){ toggleTheme(); return; }
+    if(e.key==='n'){ openNotifs(); return; }
+    if(e.key==='g'){ gPending=true; clearTimeout(gTimer); gTimer=setTimeout(()=>gPending=false,900); return; }
+    if(gPending){
+      const map={d:'dashboard',a:'detect',l:'posts',s:'settings',h:'help'};
+      if(map[e.key]){ navTo(map[e.key]); }
+      gPending=false;
+    }
+  });
+
+  /* ---- DETECT view wiring ---- */
+  $('#metaToggle')?.addEventListener('click', ()=>{ $('#metaToggle').classList.toggle('open'); $('#metaBody').classList.toggle('open'); });
+  $$('.seg[data-meta]').forEach(seg=>{
+    seg.addEventListener('click', e=>{
+      const b=e.target.closest('button[data-v]'); if(!b) return;
+      $$('button',seg).forEach(x=>x.classList.remove('on')); b.classList.add('on');
+      const key=seg.dataset.meta; detectMeta[key]=SEG_MAP[key][b.dataset.v];
+    });
+  });
+  $('#analyzeBtn')?.addEventListener('click', runDetect);
+  $('#loadSampleBtn')?.addEventListener('click', ()=>{ $('#detectInput').value=pick(DEMO_CASES).text; });
+  $('#scanAnotherBtn')?.addEventListener('click', ()=>{ STATE.lastAnalysis=null; $('#detectInput').value=''; $('#detectResult').classList.remove('show'); $('#detectIdle').style.display=''; $('#detectStatus').textContent='Awaiting input'; $('#detectInput').focus(); });
+  $('#reportPlatformBtn')?.addEventListener('click', ()=>{ if(!STATE.lastAnalysis) return; toast('Listing reported to platform moderation (demo).','fraud'); addAudit('Reported analyzed listing to platform'); });
+  $('#exportAnalysisBtn')?.addEventListener('click', ()=>{ if(!STATE.lastAnalysis) return; download('fraudguard_analysis.json', JSON.stringify(STATE.lastAnalysis,null,2),'application/json'); });
+  $('#addToQueueBtn')?.addEventListener('click', ()=>{
+    if(!STATE.lastAnalysis) return;
+    const id=Math.max(...STATE.posts.map(p=>p.id))+1;
+    const r=STATE.lastAnalysis.res;
+    const rec={id,text:STATE.lastAnalysis.text,category:pick(CATEGORIES),seller:'Manual submission',location:pick(LOCATIONS),price:randInt(1,40)*25000,date:'2026-06-30',status:'Pending',prediction:r.label,confidence:r.confidence,risk:r.risk,reviewer:'—'};
+    STATE.posts.unshift(rec); queuePost(rec);
+  });
+
+  /* ---- POSTS view wiring ---- */
+  ['postsSearch','filterStatus','filterCategory','filterRisk'].forEach(id=>{
+    $('#'+id)?.addEventListener('input', ()=>{ postsState.page=1; renderPostsTable(); });
+    $('#'+id)?.addEventListener('change', ()=>{ postsState.page=1; renderPostsTable(); });
+  });
+  $('#clearFilters')?.addEventListener('click', ()=>{ $('#postsSearch').value=''; $('#filterStatus').value=''; $('#filterCategory').value=''; $('#filterRisk').value=''; postsState.page=1; renderPostsTable(); });
+  $('#addPostBtn')?.addEventListener('click', openAddPost);
+  $('#postsExportBtn')?.addEventListener('click', exportPosts);
+  $('#postsPrintBtn')?.addEventListener('click', ()=>window.print());
+
+  /* ---- DATASET view wiring ---- */
+  ['dsSearch','dsLabel','dsCat'].forEach(id=>{
+    $('#'+id)?.addEventListener('input', ()=>{ dsState.page=1; renderDsTable(); });
+    $('#'+id)?.addEventListener('change', ()=>{ dsState.page=1; renderDsTable(); });
+  });
+  $('#datasetExport')?.addEventListener('click', exportDataset);
+  $('#datasetImport')?.addEventListener('click', ()=>toast('Import simulated — dataset already loaded for this demo.','review'));
+  $('#datasetBackup')?.addEventListener('click', ()=>toast('Backup snapshot created (demo).','genuine'));
+
+  /* ---- SELLERS ---- */
+  $$('#sellerTabs .tab').forEach(t=>t.addEventListener('click', ()=>{ sellerTab=t.dataset.tab; renderSellers(); }));
+
+  /* ---- PIPELINE ---- */
+  $('#runPipelineBtn')?.addEventListener('click', runPipeline);
+
+  /* ---- REPORTS ---- */
+  $('#repCsv')?.addEventListener('click', reportCSV);
+  $('#repJson')?.addEventListener('click', reportJSON);
+  $('#repPrint')?.addEventListener('click', printReport);
+
+  /* ---- USERS ---- */
+  $('#addUserBtn')?.addEventListener('click', openAddUser);
+
+  /* ---- HELP ---- */
+  $$('#helpTabs .tab').forEach(t=>t.addEventListener('click', ()=>{ helpTab=t.dataset.tab; renderHelp(); }));
+
+  /* ---- DASHBOARD ---- */
+  $('#dashRefresh')?.addEventListener('click', ()=>{ renderDashboard(); toast('Dashboard refreshed.','genuine'); });
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+(function init(){
+  renderDemoAccounts();
+  applyTheme('light');
+  wireGlobal();
+  renderNotifs();
+  updateReviewBadge();
+})();
+</script>
+</body>
+</html>
