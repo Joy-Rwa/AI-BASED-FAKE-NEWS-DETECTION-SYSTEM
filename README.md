@@ -127,7 +127,7 @@ dissertation. It is not a production security tool.
 
 ## 👤 Author
 
-**[Your Name]**
+**ASIFIWE Marie Joyeuse**
 Faculty of Business Information Technology, University of Kigali
 Supervisor: Dr. MUSABE Jean Bosco
 
