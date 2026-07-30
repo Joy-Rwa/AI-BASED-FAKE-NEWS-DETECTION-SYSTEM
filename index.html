@@ -732,7 +732,7 @@ table.tbl tbody tr:hover{background:var(--surface-2)}
     </div>
     <div class="login-hero">
       <div class="eyebrow" style="color:#7fb0ff;margin-bottom:14px">Consumer Protection Intelligence</div>
-      <h1>Artificial Intelligence based system for Detecting fraudulent Business Information on Facebook Marketplace.</h1>
+      <h1>Artificial Intelligence based system Detecting Facebook Marketplace Fraud.</h1>
       <p>FraudGuard AI uses Natural Language Processing and machine learning to analyze business listings and help identify potentially fraudulent information before users make purchasing decisions.</p>
       <div class="login-stats">
         <div><div class="v tnum">94.8%</div><div class="l">Model accuracy</div></div>
@@ -740,7 +740,7 @@ table.tbl tbody tr:hover{background:var(--surface-2)}
         <div><div class="v tnum">3</div><div class="l">Models compared</div></div>
       </div>
     </div>
-    <div class="login-foot">© 2026 FraudGuard AI · Research prototype · Built on the Facebook Marketplace fraud-detection.</div>
+    <div class="login-foot">© 2026 FraudGuard AI · Research prototype · Built on the Facebook Marketplace fraud detection.</div>
   </div>
   <div class="login-right">
     <div class="login-card">
@@ -1507,7 +1507,7 @@ function analyze(text, meta={}){
 const DEMO_CASES=[
  {tone:'genuine', label:'Likely genuine', text:'Selling a gently used Samsung Galaxy A54, 128GB, with the original charger and receipt. Meet at our shop for inspection before you pay.'},
  {tone:'fraud', label:'Likely fraud', text:'URGENT!! Double your money in 7 days, 100% guaranteed!! Click this link and pay a small deposit via MoMo now before slots finish!!'},
- {tone:'review', label:'Borderline', text:'Cheap land plot only 200,000 RWF, owner abroad, send deposit to reserve and the agent brings the papers later.'},
+ {tone:'fraud', label:'Borderline', text:'Cheap land plot only 200,000 RWF, owner abroad, send deposit to reserve and the agent brings the papers later.'},
  {tone:'genuine', label:'Verified store', text:'Refurbished HP EliteBook, i5, 8GB RAM, 256GB SSD, sold with a 3-month shop warranty and a 30-day return policy.'}
 ];
 
@@ -2280,7 +2280,7 @@ function renderUsers(){
     <td><div style="display:flex;align-items:center;gap:10px"><span style="width:30px;height:30px;border-radius:9px;background:${a.color};color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700">${a.initials}</span><div><div style="font-weight:600">${esc(a.name)}</div><div style="font-size:11px;color:var(--muted)">${a.user}@fraudguard.rw</div></div></div></td>
     <td>${esc(a.role)}</td><td>${chip(i===3?'Pending':'Active', i===3?'chip-amber':'chip-green')}</td><td class="tnum">${i===0?'now':randInt(2,9)+'h ago'}</td></tr>`).join('');
   $('#auditLog').innerHTML=STATE.audit.slice(0,8).map(a=>`<div class="tl-item"><span class="tl-dot"></span><div class="tl-t">${esc(a.act)}</div><div class="tl-m">${esc(a.who)}</div><div class="tl-g">${esc(a.time)}</div></div>`).join('');
-  const roles=['Administrator','Researcher','Data Analyst','Moderator','Seller'];
+  const roles=['Administrator','Researcher','Data Analyst','Moderator','Seller','Buyer'];
   const pt=$('#permTable');
   pt.querySelector('thead').innerHTML='<tr><th class="no-sort">Permission</th>'+roles.map(r=>`<th class="no-sort" style="text-align:center">${r}</th>`).join('')+'</tr>';
   pt.querySelector('tbody').innerHTML=PERMS.map(row=>`<tr><td style="font-weight:600">${esc(row.p)}</td>`+roles.map(r=>`<td style="text-align:center">${row[r]?'<svg class="ic ic-sm" style="color:var(--green)"><use href="#i-check"/></svg>':'<svg class="ic ic-sm" style="color:var(--muted)"><use href="#i-x"/></svg>'}</td>`).join('')+'</tr>').join('');
@@ -2288,7 +2288,7 @@ function renderUsers(){
 function openAddUser(){
   openModal('Add operator',
     `<div class="grid two-col"><div class="field"><label>Full name</label><input class="input" id="auName" placeholder="e.g. Grace Umutoni"></div>
-     <div class="field"><label>Role</label><select class="select" id="auRole"><option>Moderator</option><option>Data Analyst</option><option>Researcher</option><option>Administrator</option><option>Seller</option></select></div></div>`,
+     <div class="field"><label>Role</label><select class="select" id="auRole"><option>Moderator</option><option>Data Analyst</option><option>Researcher</option><option>Administrator</option><option>Seller</option><option>Buyer</option></select></div></div>`,
     `<button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-primary" id="auSave">Add operator</button>`,true);
   $('#auSave').onclick=()=>{ const n=$('#auName').value.trim(); if(!n){toast('Enter a name.','warn');return;} addAudit(`Invited operator ${n} (${$('#auRole').value})`); closeModal(); toast('Operator invited (demo).','genuine'); };
 }
