@@ -1,4 +1,4 @@
-# FraudGuard AI — Fake News Detection for Facebook Marketplace
+# FraudGuard AI — Fraud Detection for Facebook Marketplace
 
 An NLP and BERT-driven analysis console that classifies Facebook Marketplace
 business posts as **genuine** or **fraudulent**, with transparent, explainable
