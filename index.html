@@ -2265,12 +2265,12 @@ function printReport(){ window.print(); }
    Block 4c: users / settings / help / notifications / tour
    ============================================================ */
 const PERMS=[
-  {p:'View detections', Administrator:1, Researcher:1, 'Data Analyst':1, Moderator:1},
+  {p:'View detections', Administrator:1, Researcher:1, 'Data Analyst':1, Moderator:1, Seller:1},
   {p:'Run analysis',    Administrator:1, Researcher:1, 'Data Analyst':1, Moderator:1},
   {p:'Edit listings',   Administrator:1, Researcher:0, 'Data Analyst':1, Moderator:1},
   {p:'Manage dataset',  Administrator:1, Researcher:1, 'Data Analyst':1, Moderator:0},
   {p:'Manage users',    Administrator:1, Researcher:0, 'Data Analyst':0, Moderator:0},
-  {p:'Change settings', Administrator:1, Researcher:0, 'Data Analyst':0, Moderator:0}
+  {p:'Change settings', Administrator:1, Researcher:0, 'Data Analyst':0, Moderator:0},
 ];
 function renderUsers(){
   const v=$('#view-users'); if(!v) return;
@@ -2280,7 +2280,7 @@ function renderUsers(){
     <td><div style="display:flex;align-items:center;gap:10px"><span style="width:30px;height:30px;border-radius:9px;background:${a.color};color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700">${a.initials}</span><div><div style="font-weight:600">${esc(a.name)}</div><div style="font-size:11px;color:var(--muted)">${a.user}@fraudguard.rw</div></div></div></td>
     <td>${esc(a.role)}</td><td>${chip(i===3?'Pending':'Active', i===3?'chip-amber':'chip-green')}</td><td class="tnum">${i===0?'now':randInt(2,9)+'h ago'}</td></tr>`).join('');
   $('#auditLog').innerHTML=STATE.audit.slice(0,8).map(a=>`<div class="tl-item"><span class="tl-dot"></span><div class="tl-t">${esc(a.act)}</div><div class="tl-m">${esc(a.who)}</div><div class="tl-g">${esc(a.time)}</div></div>`).join('');
-  const roles=['Administrator','Researcher','Data Analyst','Moderator'];
+  const roles=['Administrator','Researcher','Data Analyst','Moderator','Seller'];
   const pt=$('#permTable');
   pt.querySelector('thead').innerHTML='<tr><th class="no-sort">Permission</th>'+roles.map(r=>`<th class="no-sort" style="text-align:center">${r}</th>`).join('')+'</tr>';
   pt.querySelector('tbody').innerHTML=PERMS.map(row=>`<tr><td style="font-weight:600">${esc(row.p)}</td>`+roles.map(r=>`<td style="text-align:center">${row[r]?'<svg class="ic ic-sm" style="color:var(--green)"><use href="#i-check"/></svg>':'<svg class="ic ic-sm" style="color:var(--muted)"><use href="#i-x"/></svg>'}</td>`).join('')+'</tr>').join('');
