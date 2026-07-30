@@ -5,7 +5,7 @@ business posts as **genuine** or **fraudulent**, with transparent, explainable
 scoring built for analysts and moderators.
 
 This repository contains the research prototype and supporting documents for a
-final-year dissertation on detecting fraudulent business information on Facebook
+final year dissertation on detecting fraudulent business information on Facebook
 Marketplace, with a focus on the Rwandan and East African context.
 
 ---
@@ -49,7 +49,7 @@ cd fraudguard-ai
 | `admin`     | `admin123`    | Administrator |
 | `researcher`| `research123` | Researcher    |
 | `analyst`   | `analyst123`  | Data Analyst  |
-| `moderator` | `mod123`      | Moderator     |
+| `moderator` | `mod123`      | Moderator 
 
 You can also create your own account from the **Create account** tab — it is
 stored locally in your browser and remembered for next time.
