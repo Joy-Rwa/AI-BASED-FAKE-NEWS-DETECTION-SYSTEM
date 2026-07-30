@@ -2288,7 +2288,7 @@ function renderUsers(){
 function openAddUser(){
   openModal('Add operator',
     `<div class="grid two-col"><div class="field"><label>Full name</label><input class="input" id="auName" placeholder="e.g. Grace Umutoni"></div>
-     <div class="field"><label>Role</label><select class="select" id="auRole"><option>Moderator</option><option>Data Analyst</option><option>Researcher</option><option>Administrator</option></select></div></div>`,
+     <div class="field"><label>Role</label><select class="select" id="auRole"><option>Moderator</option><option>Data Analyst</option><option>Researcher</option><option>Administrator</option><option>Seller</option></select></div></div>`,
     `<button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-primary" id="auSave">Add operator</button>`,true);
   $('#auSave').onclick=()=>{ const n=$('#auName').value.trim(); if(!n){toast('Enter a name.','warn');return;} addAudit(`Invited operator ${n} (${$('#auRole').value})`); closeModal(); toast('Operator invited (demo).','genuine'); };
 }
