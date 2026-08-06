@@ -1470,7 +1470,43 @@ function actionFor(label,risk){
 }
 
 function analyze(text, meta={}){
-  const t=text||''; const low=t.toLowerCase();
+
+  const t = text || "";
+  const low = t.toLowerCase();
+
+  // Business Content Detection
+  const BUSINESS_KEYWORDS = [
+    "sell","selling","sale","buy","buying","price","cost",
+    "product","service","shop","store","company","business",
+    "marketplace","delivery","payment","customer","order",
+    "available","offer","promotion","discount","rwf","frw",
+    "phone","laptop","car","house","land","rent","apartment",
+    "whatsapp","contact","call"
+  ];
+
+  const isBusiness = BUSINESS_KEYWORDS.some(word =>
+      low.includes(word)
+  );
+
+  if (!isBusiness) {
+      return {
+          label: "Not Business Related",
+          confidence: 100,
+          fraudScore: 0,
+          risk: "None",
+          features: [],
+          highlights: t,
+          hits: 0,
+          reason: "This content is not related to buying, selling, products, services, or business activities.",
+          action: {
+              text: "Fraud detection was not performed.",
+              tone: "review"
+          },
+          signalList: [],
+          threshold: STATE.settings.threshold,
+          meta
+      };
+  }
   const matched=[]; let dangerW=0, warnW=0;
   INDICATORS.forEach(ind=>{
     const hit=ind.re.test(low); ind._hit=hit;
