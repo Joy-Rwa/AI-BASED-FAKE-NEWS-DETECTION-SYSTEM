@@ -1476,17 +1476,57 @@ function analyze(text, meta={}){
 
   // Business Content Detection
   const BUSINESS_KEYWORDS = [
-    "sell","selling","sale","buy","buying","price","cost",
-    "product","service","shop","store","company","business",
-    "marketplace","delivery","payment","customer","order",
-    "available","offer","promotion","discount","rwf","frw",
-    "phone","laptop","car","house","land","rent","apartment",
-    "whatsapp","contact","call"
+    // Buying & Selling
+    "sell","selling","sale","buy","buying","purchase",
+    "product","products","item","items","goods","stock",
+    "shop","store","market","marketplace","vendor",
+    "supplier","dealer","customer","client",
+
+    // Prices & Payments
+    "price","cost","payment","deposit","advance",
+    "cash","money","profit","income","earn",
+    "salary","commission","discount","offer",
+    "promotion","deal","bargain","invoice",
+    "receipt","rwf","frw","usd","dollar",
+
+    // Services
+    "service","repair","cleaning","delivery",
+    "transport","installation","consulting",
+    "training","photography","printing",
+
+    // Property
+     "house","home","apartment","plot","land",
+    "rent","rental","lease","office","building",
+
+    // Vehicles & Electronics
+    "car","vehicle","motorcycle","bike",
+    "phone","iphone","samsung","laptop",
+    "computer","tv","television","tablet",
+
+    // Finance & Investment
+    "investment","invest","loan","credit",
+    "bank","insurance","crypto","bitcoin",
+    "forex","trading","shares","returns",
+    "business","company","enterprise",
+
+    // Contact
+    "call","contact","whatsapp","momo",
+    "airtel","mobile money"
+
+    // jobs
+    "job","jobs","vacancy","vacancies",
+    "hiring","recruitment","employment",
+    "apply","salary"
   ];
 
-  const isBusiness = BUSINESS_KEYWORDS.some(word =>
-      low.includes(word)
-  );
+  const hasBusinessKeyword =
+    BUSINESS_KEYWORDS.some(word => low.includes(word));
+
+const hasFraudIndicator =
+    INDICATORS.some(ind => ind.re.test(low));
+
+const isBusiness =
+    hasBusinessKeyword || hasFraudIndicator;
 
   if (!isBusiness) {
       return {
