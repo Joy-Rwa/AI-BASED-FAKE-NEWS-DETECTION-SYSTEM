@@ -947,9 +947,29 @@ table.tbl tbody tr:hover{background:var(--surface-2)}
               </div>
             </div>
             <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
-              <button class="btn btn-primary" id="analyzeBtn" style="flex:1;min-width:160px;padding:12px"><svg class="ic ic-sm"><use href="#i-zap"/></svg> Analyze post</button>
-              <button class="btn" id="loadSampleBtn"><svg class="ic ic-sm"><use href="#i-copy"/></svg> Load sample</button>
-            </div>
+
+    <button class="btn btn-primary" id="analyzeBtn" style="flex:1;min-width:160px;padding:12px">
+        <svg class="ic ic-sm">
+            <use href="#i-zap"/>
+        </svg>
+        Analyze Post
+    </button>
+
+    <button class="btn" id="downloadPdfBtn">
+        <svg class="ic ic-sm">
+            <use href="#i-download"/>
+        </svg>
+        Download Report
+    </button>
+
+    <button class="btn" id="loadSampleBtn">
+        <svg class="ic ic-sm">
+            <use href="#i-copy"/>
+        </svg>
+        Load Sample
+    </button>
+
+</div>
             <div style="margin-top:14px"><div class="eyebrow" style="margin-bottom:8px">Quick test cases</div>
               <div style="display:flex;gap:8px;flex-wrap:wrap" id="quickCases"></div>
             </div>
@@ -2647,5 +2667,6 @@ function wireGlobal(){
   updateReviewBadge();
 })();
 </script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> 
 </body>
 </html>
