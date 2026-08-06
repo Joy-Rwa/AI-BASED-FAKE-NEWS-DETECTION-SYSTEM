@@ -1892,16 +1892,60 @@ function finishDetect(text){
   $('#detectLoading').style.display='none';
   $('#detectStatus').textContent=res.label+' · '+res.confidence+'% conf';
   paintResult(text, res);
-  toast('Analysis complete — '+res.label.toLowerCase()+' ('+res.confidence+'%).', res.label==='Fraudulent'?'fraud':'genuine');
+  if(res.label === "Not Business Related"){
+    toast("This content is not business-related.", "warn");
+}else{
+    toast(
+        'Analysis complete — ' + res.label.toLowerCase() + ' (' + res.confidence + '%).',
+        res.label === 'Fraudulent' ? 'fraud' : 'genuine'
+    );
+}
 }
 function paintResult(text, res){
   const banner=$('#verdictBanner');
-  banner.className='verdict '+(res.label==='Fraudulent'?(res.risk==='High'?'fraud':'review'):'genuine');
-  banner.querySelector('.vbadge use').setAttribute('href', res.label==='Fraudulent'?'#i-ban':'#i-verified');
-  $('#verdictLabel').textContent=res.label==='Fraudulent'?'Fraudulent listing':'Genuine listing';
+  if(res.label === "Not Business Related"){
+    banner.className = "verdict review";
+}
+else if(res.label === "Fraudulent"){
+    banner.className = "verdict " + (res.risk==="High" ? "fraud" : "review");
+}
+else{
+    banner.className = "verdict genuine";
+}
+  if(res.label === "Not Business Related"){
+    banner.querySelector('.vbadge use').setAttribute('href','#i-search');
+}
+else if(res.label === "Fraudulent"){
+    banner.querySelector('.vbadge use').setAttribute('href','#i-ban');
+}
+else{
+    banner.querySelector('.vbadge use').setAttribute('href','#i-verified');
+}
+  if(res.label==="Not Business Related"){
+    $('#verdictLabel').textContent="Not Business Related";
+}
+else if(res.label==="Fraudulent"){
+    $('#verdictLabel').textContent="Fraudulent Listing";
+}
+else{
+    $('#verdictLabel').textContent="Genuine Listing";
+}
   $('#verdictSub').textContent=res.reason;
   $('#verdictScore').textContent=res.confidence+'%';
-  $('#confGauge').innerHTML=donutRing(res.confidence, res.label==='Fraudulent'?'var(--red)':'var(--green)','Confidence');
+let gaugeColor="var(--green)";
+
+if(res.label==="Fraudulent"){
+    gaugeColor="var(--red)";
+}
+else if(res.label==="Not Business Related"){
+    gaugeColor="var(--amber)";
+}
+
+$('#confGauge').innerHTML=donutRing(
+    res.confidence,
+    gaugeColor,
+    "Confidence"
+);
   $('#riskGauge').innerHTML=semiGauge(res.fraudScore);
   $('#featureBreak').innerHTML=hbars(res.features,{max:100,fmt:v=>v+'%'});
   $('#highlightOut').innerHTML=res.highlights||esc(text);
@@ -1916,7 +1960,7 @@ function detailHTML(res){
   const at=res.action, col=at.tone==='fraud'?'red':at.tone==='review'?'amber':'green';
   const row=(k,val)=>`<div class="feature-row" style="margin:0"><div class="nm">${k}</div><div style="flex:1">${val}</div></div>`;
   return `<div style="display:flex;flex-direction:column;gap:12px">
-    ${row('Verdict', chip(res.label))}
+    ${row('Content Type', chip(res.label))}
     ${row('Risk level', chip(res.risk))}
     ${row('Fraud score', `<span class="tnum" style="font-weight:700">${res.fraudScore}/100</span>`)}
     ${row('Decision threshold', `<span class="tnum">${res.threshold}%</span>`)}
