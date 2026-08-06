@@ -2500,7 +2500,7 @@ function markAllRead(){ STATE.notifications.forEach(n=>n.read=true); renderNotif
 
 let tourShown=false, tourStep=0;
 const TOUR=[
-  {sel:'.sb-link[data-view="detect"]', title:'Start with live detection', body:'Paste any marketplace listing here and the AI explains whether it looks fraudulent — and why.'},
+  {sel:'.sb-link[data-view="detect"]', title:'Start with live detection', body:'Paste any marketplace listing here and the AI explains whether it looks fraudulent and why.'},
   {sel:'#globalSearch', title:'Search anywhere', body:'Jump to listings, sellers or views from anywhere in the app.'},
   {sel:'#notifBtn', title:'Stay alerted', body:'High-risk detections and queue updates surface here in real time.'},
   {sel:'#themeBtn', title:'Make it yours', body:'Toggle dark mode any time. That\u2019s the tour — explore freely!'}
@@ -2604,6 +2604,7 @@ function wireGlobal(){
     });
   });
   $('#analyzeBtn')?.addEventListener('click', runDetect);
+  $('#downloadPdfBtn')?.addEventListener('click', downloadPdfReport);
   $('#loadSampleBtn')?.addEventListener('click', ()=>{ $('#detectInput').value=pick(DEMO_CASES).text; });
   $('#scanAnotherBtn')?.addEventListener('click', ()=>{ STATE.lastAnalysis=null; $('#detectInput').value=''; $('#detectResult').classList.remove('show'); $('#detectIdle').style.display=''; $('#detectStatus').textContent='Awaiting input'; $('#detectInput').focus(); });
   $('#reportPlatformBtn')?.addEventListener('click', ()=>{ if(!STATE.lastAnalysis) return; toast('Listing reported to platform moderation (demo).','fraud'); addAudit('Reported analyzed listing to platform'); });
